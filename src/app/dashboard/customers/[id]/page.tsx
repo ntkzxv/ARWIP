@@ -2,161 +2,174 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../../utils/supabase'
 import { useParams, useRouter } from 'next/navigation'
-import { 
-  ArrowLeft, User, MapPin, Briefcase, Phone, 
-  CreditCard, ShieldCheck, History, Users, Calendar, 
-  ChevronRight, BadgeDollarSign, Mail
-} from 'lucide-react'
+import { ArrowLeft, Loader2, Edit2, Save } from 'lucide-react'
+
+// Import Components
+import Sidebar from './components/Sidebar'
+import PersonalInfo from './components/PersonalInfo'
+import GuarantorInfo from './components/GuarantorInfo'
+import PurchaseHistory from './components/PurchaseHistory'
+import InstallmentDetails from './components/InstallmentDetails' 
+
+import Swal from 'sweetalert2'
 
 export default function CustomerDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  
+  // 1. States สำหรับจัดการ UI และข้อมูล
+  const [activeTab, setActiveTab] = useState('personal')
+  const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  
+  // 2. States สำหรับเก็บข้อมูล Database
   const [customer, setCustomer] = useState<any>(null)
   const [contracts, setContracts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  
+  // 3. States สำหรับการแก้ไข (ใช้เฉพาะ Tab Personal)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState<any>({})
+  const [sales, setSales] = useState<any[]>([])
 
-  useEffect(() => {
-    const fetchFullDetail = async () => {
-      setLoading(true)
-      // 1. ดึงข้อมูลลูกค้า + สาขา
-      const { data: custData } = await supabase
+  // ฟังก์ชันดึงข้อมูลทั้งหมด
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      // ดึง User Role
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        setUserRole(profile?.role)
+      }
+
+      // ดึงข้อมูลลูกค้า
+      const { data: custData, error: custErr } = await supabase
         .from('customers')
-        .select(`*, branches(branch_name)`)
+        .select(`*, branches(*)`)
         .eq('id', id)
         .single()
+      if (custErr) throw custErr
 
-      // 2. ดึงสัญญาผ่อน + ข้อมูลผู้ค้ำ + รายการขาย
+      // ดึงข้อมูลสัญญา + รายการขาย + ผู้ค้ำ
       const { data: contractData } = await supabase
         .from('installment_contracts')
         .select(`
           *,
-          sales_transactions(product_name, unit_price, employee_id, employees(full_name)),
-          guarantors(*)
+          sales_transactions (*),
+          installment_payments (*),
+          guarantors (*)
         `)
         .eq('customer_id', id)
+      const { data: salesData } = await supabase
+        .from('sales_transactions')
+        .select('*')
+        .eq('customer_id', id)
+        .eq('transaction_type', 'cash')
+      // อัปเดต State ครั้งเดียว
+      setCustomer(custData)
+      setEditForm(custData)
+      setContracts(contractData || [])
+      setSales(salesData || [])
 
-      if (custData) setCustomer(custData)
-      if (contractData) setContracts(contractData)
+    } catch (error: any) {
+      console.error("Fetch Error:", error.message)
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลลูกค้าได้', 'error')
+    } finally {
       setLoading(false)
     }
-    fetchFullDetail()
-  }, [id])
+  }
 
-  if (loading) return <div className="p-20 text-center font-bold">กำลังดึงข้อมูลเชิงลึก...</div>
-  if (!customer) return <div className="p-20 text-center font-bold text-red-500">ไม่พบข้อมูลลูกค้าท่านนี้</div>
+  useEffect(() => { fetchData() }, [id])
+
+  // ฟังก์ชันบันทึกข้อมูลลูกค้า
+  const handleSave = async () => {
+    try {
+      const { error } = await supabase.from('customers').update(editForm).eq('id', id)
+      if (error) throw error
+      await Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false })
+      setIsEditing(false)
+      fetchData()
+    } catch (e: any) {
+      Swal.fire('Error', e.message, 'error')
+    }
+  }
+
+  const canEdit = userRole === 'admin' || userRole === 'manager'
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <Loader2 className="animate-spin text-indigo-600" size={32} />
+    </div>
+  )
 
   return (
-    <div className="p-6 md:p-10 lg:ml-10 space-y-8 bg-[#f8fafc] min-h-screen">
-      {/* Header & Back Button */}
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={() => router.back()}
-          className="p-3 bg-white rounded-2xl shadow-sm hover:bg-slate-50 transition-all text-slate-400 hover:text-slate-800"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Customer Profile</h1>
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">ID: {customer.id_card}</p>
+    <div className="p-6 md:p-12 lg:ml-16 space-y-10 bg-[#f4f7fe] min-h-screen font-sans">
+      
+      {/* Header Section */}
+      <div className="flex justify-between items-center max-w-7xl mx-auto">
+        <div className="flex items-center gap-6">
+          <button onClick={() => router.back()} className="p-4 bg-white rounded-3xl shadow-sm text-slate-400 active:scale-95 transition-all">
+            <ArrowLeft size={24} />
+          </button>
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black tracking-tight text-slate-800 leading-none">
+              {customer?.full_name}
+            </h1>
+            <p className="text-xs font-black text-blue-500 uppercase tracking-[0.2em]">Customer Profile</p>
+          </div>
         </div>
+        
+        {/* แสดงปุ่ม Edit เฉพาะเมื่ออยู่ที่หน้า ข้อมูลส่วนตัว เท่านั้น */}
+        {activeTab === 'personal' && canEdit && (
+          <button 
+            onClick={() => isEditing ? handleSave() : setIsEditing(true)} 
+            className={`px-8 py-4 rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg transition-all active:scale-95 ${isEditing ? 'bg-emerald-500 text-white' : 'bg-[#1e1e2d] text-white hover:bg-blue-600'}`}
+          >
+            {isEditing ? <><Save size={18}/> บันทึกข้อมูล</> : <><Edit2 size={18}/> แก้ไขข้อมูลลูกค้า</>}
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
         
-        {/* 💳 Left Column: ข้อมูลส่วนตัวและเครดิต */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100 relative overflow-hidden">
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="w-24 h-24 bg-blue-600 text-white rounded-[30px] flex items-center justify-center text-4xl font-black mb-4 shadow-xl shadow-blue-100">
-                {customer.full_name?.charAt(0)}
-              </div>
-              <h2 className="text-xl font-black text-slate-800">{customer.full_name}</h2>
-              <p className="text-blue-600 font-bold text-sm mb-6 uppercase tracking-tighter">@{customer.line_id || 'no-line'}</p>
-              
-              <div className={`px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] ${
-                customer.financial_status === 'good' ? 'bg-emerald-50 text-emerald-600' : 
-                customer.financial_status === 'fair' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
-              }`}>
-                Credit Status: {customer.financial_status}
-              </div>
-            </div>
-          </div>
+        {/* Sidebar สำหรับเปลี่ยน Tab */}
+        <Sidebar 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          customerScore={customer?.credit_score || 50} 
+        />
 
-          <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100 space-y-6">
-            <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest border-b border-slate-50 pb-4">Contact & Work</h3>
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-slate-50 rounded-xl text-blue-500"><Phone size={18}/></div>
-                <div><p className="text-[10px] font-black text-slate-400 uppercase">Phone</p><p className="text-sm font-bold text-slate-700">{customer.phone}</p></div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-slate-50 rounded-xl text-orange-500"><Briefcase size={18}/></div>
-                <div><p className="text-[10px] font-black text-slate-400 uppercase">Workplace</p><p className="text-sm font-bold text-slate-700">{customer.work_place}</p></div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-slate-50 rounded-xl text-emerald-500"><MapPin size={18}/></div>
-                <div><p className="text-[10px] font-black text-slate-400 uppercase">Address</p><p className="text-sm font-bold text-slate-700 leading-relaxed">{customer.current_address}</p></div>
-              </div>
-            </div>
-          </div>
+        {/* Content Display Area - เช็คเงื่อนไขแยกเด็ดขาด ไม่ให้หน้าทับกัน */}
+        <div className="flex-1 bg-white rounded-[45px] shadow-sm border border-slate-100 p-12 min-h-[600px]">
+          
+          {/* 1. หน้าข้อมูลส่วนตัว */}
+          {activeTab === 'personal' && (
+            <PersonalInfo 
+              customer={customer} 
+              isEditing={isEditing} 
+              editForm={editForm} 
+              setEditForm={setEditForm} 
+            />
+          )}
+
+          {/* 2. หน้าประวัติการซื้อ */}
+          {activeTab === 'history' && (
+            <PurchaseHistory contracts={contracts}
+              sales={sales}
+             />
+          )}
+
+          {/* 3. หน้าผู้ค้ำประกัน */}
+          {activeTab === 'guarantor' && (
+            <GuarantorInfo contracts={contracts} />
+          )}
+
+          {/* 4. หน้ารายละเอียดการผ่อน (ถ้ายังไม่ทำไฟล์ให้โชว์ข้อความรอ) */}
+          {activeTab === 'installment' && (
+            <InstallmentDetails contracts={contracts} />
+          )}
+
         </div>
-
-        {/* 📊 Right Column: สัญญาผ่อนและผู้ค้ำ */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-[#1e1e2d] rounded-[45px] p-10 text-white relative overflow-hidden shadow-2xl">
-             <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-8">
-                   <BadgeDollarSign className="text-blue-400" size={32} />
-                   <h2 className="text-2xl font-black italic">Active Contracts</h2>
-                </div>
-                
-                {contracts.length > 0 ? (
-                  contracts.map((con) => (
-                    <div key={con.id} className="bg-white/5 rounded-[30px] p-8 border border-white/10 space-y-8 mb-6">
-                       <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Product</p>
-                            <h4 className="text-2xl font-black">{con.sales_transactions?.product_name}</h4>
-                          </div>
-                          <div className="text-right">
-                             <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Remaining</p>
-                             <p className="text-2xl font-black text-emerald-400">฿{Number(con.total_loan_amount).toLocaleString()}</p>
-                          </div>
-                       </div>
-
-                       <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5">
-                          <div><p className="text-[9px] font-bold text-slate-500 uppercase">Term</p><p className="font-black">{con.period_months} Months</p></div>
-                          <div><p className="text-[9px] font-bold text-slate-500 uppercase">Monthly</p><p className="font-black text-blue-400">฿{Number(con.monthly_payment).toLocaleString()}</p></div>
-                          <div><p className="text-[9px] font-bold text-slate-500 uppercase">Due Day</p><p className="font-black">Every {con.due_day}th</p></div>
-                       </div>
-
-                       {/* 🛡️ ผู้ค้ำประกัน (Guarantor) */}
-                       {con.guarantors && (
-                         <div className="bg-white/5 p-6 rounded-2xl flex items-center justify-between group hover:bg-white/10 transition-all cursor-default">
-                            <div className="flex items-center gap-4">
-                               <div className="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center"><Users size={18}/></div>
-                               <div>
-                                  <p className="text-[9px] font-bold text-slate-500 uppercase">Guarantor</p>
-                                  <p className="text-sm font-black">{con.guarantors.full_name} ({con.guarantors.relationship})</p>
-                                  <p className="text-[10px] text-slate-400 font-bold">{con.guarantors.phone}</p>
-                               </div>
-                            </div>
-                            <div className="text-right hidden md:block">
-                               <p className="text-[9px] font-bold text-slate-500 uppercase">ID Card</p>
-                               <p className="text-[10px] font-black text-slate-300">{con.guarantors.id_card}</p>
-                            </div>
-                         </div>
-                       )}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-slate-500 font-bold italic">ยังไม่มีประวัติการทำสัญญาผ่อนชำระ</p>
-                )}
-             </div>
-             <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
-          </div>
-        </div>
-
       </div>
     </div>
   )

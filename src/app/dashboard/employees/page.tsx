@@ -59,7 +59,11 @@ export default function EmployeesPage() {
     return isNotLookingAtAdmin && passHierarchy && passBranch && matchesSearch
   })
 
-  if (loading) return <div className="min-h-[400px] flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>
+    if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f4f7fe] lg:ml-10">
+      <Loader2 className="animate-spin text-indigo-600" size={32} />
+    </div>
+  )
 
   return (
     <div className="space-y-8">
@@ -103,7 +107,7 @@ export default function EmployeesPage() {
                   >
                     <td className="py-5 px-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black group-hover:bg-blue-600 group-hover:text-white transition-all overflow-hidden">
+                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black group-hover:bg-indigo-600 group-hover:text-white transition-all overflow-hidden">
                           {emp.avatar_url ? (
                             <img src={emp.avatar_url} className="w-full h-full object-cover" />
                           ) : (

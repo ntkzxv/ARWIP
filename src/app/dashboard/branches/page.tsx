@@ -38,7 +38,7 @@ export default function BranchesPage() {
      * - เพิ่ม ml-14 ถึง ml-20 เพื่อดันเนื้อหาหลบ Sidebar (ปรับตามความกว้าง Sidebar จริง)
      * - ใช้ max-w-7xl เพื่อไม่ให้ข้อมูลแผ่กระจายจนเกินไปในจอ Wide
      */
-    <div className="p-6 md:p-12 lg:ml-16 space-y-12 bg-[#f8fafc] min-h-screen">
+    <div className="p-6 md:p-12 lg:ml-16 space-y-12 min-h-screen">
       
       {/* --- HEADER SECTION --- */}
       <header className="max-w-6xl mx-auto">
