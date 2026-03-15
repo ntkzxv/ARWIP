@@ -3,15 +3,34 @@ import { useState } from 'react'
 import { 
   Calendar, Clock, CheckCircle2, AlertCircle, 
   Receipt, ArrowLeft, Layers, ShoppingBag, 
-  Hash, ArrowRight, Banknote, Box
+  Hash, ArrowRight, Banknote, Box, ChevronRight
 } from 'lucide-react'
+// 🚩 นำเข้า Modal (ปรับ path ตามจริงของคุณ เช่น '@/components/PaymentDetailModal')
+import PaymentDetailModal from '../../../../../components/PaymentDetailModal' 
 
 export default function InstallmentDetails({ contracts }: { contracts: any[] }) {
   const [activeContractId, setActiveContractId] = useState<string | null>(null);
 
+  // 🚩 เพิ่ม State สำหรับควบคุม Modal
+  const [selectedBill, setSelectedBill] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 🚩 ฟังก์ชันเปิด Modal
+  const handleOpenModal = (payment: any, contract: any) => {
+    const enrichedData = {
+      ...payment,
+      customer_name: contract.customers?.full_name || 'ไม่ระบุชื่อลูกค้า',
+      product_id: contract.sales_transactions?.product_id || 'N/A'
+    };
+    setSelectedBill(enrichedData);
+    setIsModalOpen(true);
+  };
+
   // --- 🟢 หน้าที่ 2: รายการบิลย่อย (Sub-bills) ---
   if (activeContractId) {
     const selectedContract = contracts.find(c => c.id === activeContractId);
+    if (!selectedContract) return null; // Safety check
+
     const sale = selectedContract?.sales_transactions || {};
     const payments = selectedContract?.installment_payments || [];
 
@@ -67,14 +86,18 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
           {payments.sort((a: any, b: any) => a.installment_number - b.installment_number).map((item: any) => {
             const isPaid = item.status === 'paid';
             const isOverdue = new Date(item.due_date) < new Date() && !isPaid;
-            // 🚩 กลับมาใช้สีแดง red-100 / red-500
+            
             const statusStyles = isPaid ? 'border-emerald-100 bg-emerald-50/20 hover:border-emerald-500' : isOverdue ? 'border-red-100 bg-red-50/10 hover:border-red-500' : 'border-slate-50 bg-white hover:border-blue-500';
             const priceColor = isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : 'text-slate-800';
 
             return (
-              <div key={item.id} className={`flex items-center justify-between p-7 rounded-[40px] border-2 transition-all cursor-default shadow-sm hover:shadow-md ${statusStyles}`}>
+              <div 
+                key={item.id} 
+                // 🚩 เพิ่ม onClick เพื่อเปิด Modal
+                onClick={() => handleOpenModal(item, selectedContract)}
+                className={`flex items-center justify-between p-7 rounded-[40px] border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${statusStyles}`}
+              >
                 <div className="flex items-center gap-6">
-                  {/* วงกลมเลขงวด: 🚩 กลับมาใช้สีแดงและกระพริบ */}
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${isPaid ? 'bg-emerald-500 text-white' : isOverdue ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400'}`}>
                     {item.installment_number}
                   </div>
@@ -82,7 +105,6 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
                     <p className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-500' : isPaid ? 'text-emerald-600' : 'text-slate-400'}`}>
                         {isOverdue ? 'เกินกำหนดชำระ' : isPaid ? 'ชำระเรียบร้อย' : 'กำหนดชำระ'}: {new Date(item.due_date).toLocaleDateString('th-TH')}
                     </p>
-                    {/* ยอดเงินยังคงเขียวมืดพรีเมียม */}
                     <p className={`text-xl font-black tracking-tighter ${priceColor}`}>
                       ฿{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </p>
@@ -107,6 +129,11 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
             );
           })}
         </div>
+
+        {/* 🚩 ส่วนแสดง Modal ลอยทับหน้าจอเมื่อมีการเลือกบิล */}
+        {isModalOpen && (
+          <PaymentDetailModal item={selectedBill} onClose={() => setIsModalOpen(false)} />
+        )}
       </div>
     );
   }
@@ -114,8 +141,8 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
   // --- 🔵 หน้าที่ 1: หน้าสรุป (Card View) ---
   return (
     <div className="space-y-8 animate-in fade-in duration-500">   
-    <div className="flex justify-between items-end px-2 mb-6">
-    <div className="space-y-1"></div>
+      <div className="flex justify-between items-end px-2 mb-6">
+        <div className="space-y-1"></div>
         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
             <span className="text-[12px] font-black text-indigo-600 uppercase tracking-widest">
             {contracts.filter((c: any) => c.contract_status !== 'completed').length} จำนวนดำเนิดการ
@@ -125,7 +152,7 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
             {contracts.length} จำนวนทั้งหมด
             </span>
         </div>
-    </div>
+      </div>
       {contracts.length > 0 ? (
         contracts.map((contract: any) => {
           const sale = contract?.sales_transactions || {};
@@ -152,7 +179,6 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
 
           if (overdueCount > 0) {
             statusTheme = {
-              // 🚩 กลับมาใช้สีแดง red-500 และกระพริบ
               bag: "bg-red-500 shadow-red-100 animate-pulse", 
               text: "text-red-500",
               title: "text-red-500",
@@ -199,7 +225,6 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
                     </div>
                   </div>
                 </div>
-                {/* 🚩 Badge กลับมาเป็นสีแดง กระพริบ */}
                 <div className={`px-5 py-2 rounded-full font-black text-[10px] uppercase tracking-widest border-2 transition-all ${statusTheme.badge}`}>
                   {statusTheme.label}
                 </div>

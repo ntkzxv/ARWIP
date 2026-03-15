@@ -55,6 +55,7 @@ export default function CustomerDetailPage() {
         .from('installment_contracts')
         .select(`
           *,
+          customers (full_name),
           sales_transactions (*),
           installment_payments (*),
           guarantors (*)
