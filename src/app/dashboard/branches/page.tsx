@@ -42,10 +42,14 @@ export default function BranchesPage() {
       
       {/* --- HEADER SECTION --- */}
       <header className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-black text-slate-800 tracking-tight">Branch Management</h1>
-        <p className="text-slate-500 font-medium mt-2 text-base italic">
-          ภาพรวมข้อมูลพนักงานและสถานะของแต่ละสาขา (Connected to Database)
-        </p>
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
+            branch<span className="text-indigo-600">units</span>
+          </h1>
+          <p className="text-[10.5px] font-black text-slate-400 uppercase tracking-[0.3em]">
+            รายละเอียดข้อมูลสาขา
+          </p>
+        </div>
       </header>
 
       {/* --- BRANCH CARDS GRID --- */}

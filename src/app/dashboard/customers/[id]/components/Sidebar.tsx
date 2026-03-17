@@ -1,12 +1,14 @@
 'use client'
-import { User, History, CreditCard, Users, ShieldCheck } from 'lucide-react'
+import { User, History, CreditCard, Users, ShieldCheck, ClipboardList } from 'lucide-react' // 🚩 เพิ่ม ClipboardList
 
 export default function Sidebar({ activeTab, setActiveTab, customerScore }: any) {
   const menuItems = [
     { id: 'personal', label: 'ข้อมูลส่วนตัว', icon: <User size={18} /> },
+    { id: 'guarantor', label: 'ผู้ค้ำประกัน', icon: <Users size={18} /> },    
     { id: 'history', label: 'ประวัติการซื้อ', icon: <History size={18} /> },
     { id: 'installment', label: 'รายละเอียดการผ่อน', icon: <CreditCard size={18} /> },
-    { id: 'guarantor', label: 'ผู้ค้ำประกัน', icon: <Users size={18} /> },
+    // 🚩 เพิ่มเมนูใหม่เข้าไปที่นี่
+    { id: 'collection_logs', label: 'ประวัติการติดตาม', icon: <ClipboardList size={18} /> },
   ]
 
   return (

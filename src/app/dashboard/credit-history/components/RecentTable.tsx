@@ -1,5 +1,5 @@
 'use client'
-import { CheckCircle2, Wallet, ArrowUpRight, Smartphone, Hash } from 'lucide-react'
+import { CheckCircle2, Wallet, Smartphone, Hash, ChevronRight } from 'lucide-react'
 
 // กำหนด Interface ให้ชัดเจน
 interface RecentTableProps {
@@ -8,7 +8,6 @@ interface RecentTableProps {
 }
 
 export default function RecentTable({ data, onRowClick }: RecentTableProps) {
-  // เช็คเบื้องต้นว่ามีข้อมูลไหม
   if (!data || data.length === 0) {
     return (
       <div className="py-40 text-center">
@@ -27,7 +26,7 @@ export default function RecentTable({ data, onRowClick }: RecentTableProps) {
             <tr 
               key={item.id || index} 
               onClick={() => onRowClick(item)}
-              className="group bg-white hover:bg-slate-50/50 transition-all duration-500 shadow-sm hover:shadow-xl rounded-[35px] hover:-translate-y-1 border-2 border-slate-100/60 hover:border-indigo-100 cursor-pointer"
+              className="group bg-white hover:bg-slate-50/50 transition-all duration-500 shadow-sm hover:shadow-xl rounded-[35px] hover:-translate-y-1 border-2 border-slate-100/60 hover:border-emerald-100 cursor-pointer"
             >
               {/* 1. Icon Section */}
               <td className="py-9 pl-12 rounded-l-[35px] w-[130px] align-middle">
@@ -44,7 +43,7 @@ export default function RecentTable({ data, onRowClick }: RecentTableProps) {
                 </div>
               </td>
 
-              {/* 2. Customer Name (เช็คชื่อ Field ให้ตรงกับ DB) */}
+              {/* 2. Customer Name */}
               <td className="py-9 align-middle w-[22%] pl-2">
                 <div className="flex flex-col">
                   <span className="text-[20px] font-black text-slate-900 tracking-tight leading-none group-hover:text-emerald-600 transition-colors">
@@ -64,7 +63,7 @@ export default function RecentTable({ data, onRowClick }: RecentTableProps) {
                 <div className="flex flex-col items-end pr-10 border-r border-slate-100 h-12 justify-center">
                   <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1 leading-none">Received</span>
                   <div className="flex items-baseline gap-1 leading-none">
-                    <span className="text-[24px] font-black text-slate-950 tracking-tighter italic">
+                    <span className="text-[24px] font-black text-slate-950 tracking-tighter">
                       {Number(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                     <span className="text-[10px] font-black text-emerald-600 uppercase font-sans">THB</span>
@@ -72,7 +71,7 @@ export default function RecentTable({ data, onRowClick }: RecentTableProps) {
                 </div>
               </td>
 
-              {/* 4. Timeline (วันที่ไทย + ปี ค.ศ.) */}
+              {/* 4. Timeline */}
               <td className="py-9 align-middle w-[22%] pl-10">
                 <div className="flex flex-col h-12 justify-center">
                   <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1 leading-none">Timeline</span>
@@ -92,29 +91,34 @@ export default function RecentTable({ data, onRowClick }: RecentTableProps) {
                 </div>
               </td>
 
-              {/* 5. Term & Button */}
+              {/* 5. Product ID & Term */}
               <td className="py-9 pr-12 rounded-r-[35px] flex-1 align-middle">
                 <div className="flex items-center justify-between">
+                  
                   <div className="flex items-center gap-8 pl-10 h-10 w-full max-w-[320px]">
                     <div className="flex flex-col flex-1 min-w-0">
-                      <span className="text-[9px] font-black text-slate-300 uppercase mb-1.5 tracking-widest">Asset ID</span>
+                      <span className="text-[9px] font-black text-slate-300 uppercase mb-1.5 tracking-widest">Product ID</span>
                       <div className="flex items-center gap-1.5 text-slate-600">
-                        <Smartphone size={12} className="opacity-40" />
-                        <span className="text-[13px] font-black font-mono truncate">{item.product_id || 'N/A'}</span>
+                        <Smartphone size={12} className="opacity-40 shrink-0 text-emerald-500" />
+                        <span className="text-[13px] font-black font-mono truncate uppercase">
+                          {item.product_id || 'N/A'}
+                        </span>
                       </div>
                     </div>
                     
                     <div className="flex flex-col items-center w-20 shrink-0 border-l-2 border-slate-100 pl-6">
-                      <span className="text-[9px] font-black text-slate-300 uppercase mb-1.5 tracking-widest">Term</span>
-                      <span className="text-[20px] font-black text-emerald-600 italic leading-none">
+                      <span className="text-[9px] font-black text-slate-300 uppercase mb-1.5 tracking-widest text-center">Term</span>
+                      <span className="text-[20px] font-black text-emerald-600 text-center tracking-tighter italic leading-none">
                         {item.installment_number || '-'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
-                    <ArrowUpRight size={18} strokeWidth={3} />
+                  {/* ปุ่มลูกศร */}
+                  <div className="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:rotate-45 transition-all duration-500 shadow-inner shrink-0 ml-4">
+                    <ChevronRight size={18} strokeWidth={3} />
                   </div>
+
                 </div>
               </td>
             </tr>

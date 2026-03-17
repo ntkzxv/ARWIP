@@ -2,150 +2,244 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../utils/supabase'
 import { useRouter } from 'next/navigation'
-import { Search, Shield, Loader2, MapPin } from 'lucide-react'
+import { 
+  Search, Loader2, MapPin, UserCircle, 
+  ChevronDown, Lock, Building2, UserPlus,
+  BadgeCheck, Users
+} from 'lucide-react'
 
 export default function EmployeesPage() {
   const router = useRouter()
   const [employees, setEmployees] = useState<any[]>([])
+  const [branches, setBranches] = useState<any[]>([])
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedBranch, setSelectedBranch] = useState('all')
+  const [isBranchOpen, setIsBranchOpen] = useState(false)
 
-  // 👑 ลำดับสิทธิ์ (Admin = 1, Manager = 2, Staff = 3)
-  const roleHierarchy: { [key: string]: number } = {
-    'admin': 1,
-    'manager': 2,
-    'staff': 3
+  const roleHierarchy: { [key: string]: number } = { 'admin': 1, 'supervisor': 2, 'manager': 3, 'staff': 4 }
+
+  // 🚩 ฟังก์ชันสำหรับดึงข้อมูลพนักงาน (ทำแยกออกมาเพื่อให้ Realtime เรียกใช้ได้)
+  const fetchEmployees = async () => {
+    const { data: empData } = await supabase.from('employees').select('*, branches(branch_name)')
+    if (empData) {
+      // ✅ เติม Timestamp ให้กับ URL รูปภาพทุุกใบเพื่อแก้ปัญหา Cache
+      const dataWithTimestamp = empData.map(emp => ({
+        ...emp,
+        avatar_url: emp.avatar_url ? `${emp.avatar_url}?t=${Date.now()}` : null
+      }))
+      const sortedData = [...dataWithTimestamp].sort((a, b) => (roleHierarchy[a.role] || 99) - (roleHierarchy[b.role] || 99))
+      setEmployees(sortedData)
+    }
   }
 
   useEffect(() => {
     const initPage = async () => {
       setLoading(true)
       const savedUserId = localStorage.getItem('current_user_id')
-      const { data: userData } = await supabase.from('employees').select('*').eq('id', savedUserId).single()
+      const { data: userData } = await supabase.from('employees').select('*, branches(branch_name)').eq('id', savedUserId).single()
       
-      // ✅ แก้ไข: อนุญาตให้ Manager (Level 2) เข้าใช้งานได้ด้วย
-      if (!userData || roleHierarchy[userData.role] > 2) {
+      if (!userData || roleHierarchy[userData.role] > 3) {
         router.push('/dashboard'); return
       }
       setCurrentUser(userData)
 
-      const { data: empData } = await supabase.from('employees').select('*, branches(branch_name)').order('role', { ascending: true })
-      if (empData) setEmployees(empData)
+      // ดึงข้อมูลครั้งแรก
+      await fetchEmployees()
+      
+      const { data: branchData } = await supabase.from('branches').select('*')
+      if (branchData) setBranches(branchData)
+      
       setLoading(false)
     }
     initPage()
+
+    // 📡 [REALTIME] ฟังการเปลี่ยนแปลงของตาราง employees
+    const channel = supabase
+      .channel('employee-list-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'employees' },
+        () => {
+          // เมื่อมีการเปลี่ยนข้อมูล (เช่น อัปรูปใหม่) ให้ดึงข้อมูลใหม่ทันที
+          fetchEmployees()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [router])
 
   const filteredEmployees = employees.filter(emp => {
-    const userRole = currentUser?.role
-    const userLevel = roleHierarchy[userRole] || 99
-    const targetLevel = roleHierarchy[emp.role] || 99
-
-    // 🛡️ กฎการมองเห็นใหม่:
-    // 1. ห้ามเห็น Admin เด็ดขาด (ถ้าคนดูไม่ใช่ Admin เอง)
-    const isNotLookingAtAdmin = userRole === 'admin' ? true : emp.role !== 'admin'
+    const userRole = currentUser?.role?.toLowerCase();
+    const isHighLevel = userRole === 'admin' || userRole === 'supervisor';
     
-    // 2. ระดับสิทธิ์ต้องเท่ากันหรือต่ำกว่า (Manager ห้ามเห็น Admin, Staff ห้ามเห็น Manager)
-    const passHierarchy = targetLevel >= userLevel
+    const isNotLookingAtAdmin = userRole === 'admin' ? true : emp.role?.toLowerCase() !== 'admin';
+    const passHierarchy = (roleHierarchy[emp.role?.toLowerCase()] || 99) >= (roleHierarchy[userRole] || 99);
+    const passBranchFilter = selectedBranch === 'all' ? true : emp.branch_id === selectedBranch;
+    const passBranchAccess = isHighLevel ? true : emp.branch_id === currentUser.branch_id;
     
-    // 3. กฎสาขา: Admin เห็นหมด / Manager เห็นเฉพาะสาขาตัวเอง
-    const passBranch = userRole === 'admin' ? true : emp.branch_id === currentUser.branch_id
-    
-    // 4. ค้นหาชื่อหรือ ID
     const matchesSearch = emp?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         emp?.login_id?.toLowerCase().includes(searchTerm.toLowerCase())
+                          emp?.login_id?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return isNotLookingAtAdmin && passHierarchy && passBranch && matchesSearch
-  })
+    return isNotLookingAtAdmin && passHierarchy && passBranchFilter && passBranchAccess && matchesSearch;
+  });
 
-    if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f4f7fe] lg:ml-10">
-      <Loader2 className="animate-spin text-indigo-600" size={32} />
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f4f7fe]">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="animate-spin text-indigo-600" size={40} />
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Loading Directory</p>
+      </div>
     </div>
   )
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tight">รายชื่อพนักงาน</h1>
-        <p className="text-slate-500 text-sm">
-          {currentUser?.role === 'admin' ? 'จัดการข้อมูลพนักงานทุกสาขา' : `รายชื่อพนักงาน - สาขา ${currentUser?.branches?.branch_name || ''}`}
-        </p>
+      <div className="space-y-6 pb-10 font-sans pl-30 pr-15">
+      <header className="flex justify-between items-center shrink-0">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
+            employees<span className="text-indigo-600"> list</span>
+          </h1>
+          <p className="text-[10.5px] font-black text-slate-400 uppercase tracking-[0.3em]">
+            รายละเอียดข้อมูลพนักงานทั้งหมด
+          </p>
+        </div>
       </header>
 
-      <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-50">
-        <div className="flex justify-between items-center mb-10">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="ค้นหาชื่อ หรือ ID พนักงาน..." 
-              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/5 transition-all text-sm font-bold" 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-            />
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 shrink-0">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+          <input 
+            type="text" 
+            placeholder="Search by name, ID or position..." 
+            className="w-full pl-14 pr-6 py-5 bg-white border-none rounded-[24px] outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all text-sm font-bold shadow-sm shadow-slate-200/50" 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+          />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-            <tr className="text-[12px] font-black text-slate-800 uppercase tracking-[0.2em] border-b-2 border-slate-100">
-            <th className="pb-4 px-6">พนักงาน</th>
-            <th className="pb-4 px-6">ตำแหน่ง / สาขา</th>
-            <th className="pb-4 px-6 text-center">สิทธิ์</th>
-            </tr>
+        <div className="relative w-full md:w-72">
+          <button 
+            onClick={() => setIsBranchOpen(!isBranchOpen)}
+            className="w-full bg-white px-6 py-5 rounded-[24px] shadow-sm shadow-slate-200/50 flex items-center justify-between group hover:bg-slate-50 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <Building2 size={18} className="text-indigo-600" />
+              <span className="text-sm font-black uppercase italic tracking-tighter text-slate-700">
+                {selectedBranch === 'all' ? 'All Branches' : branches.find(b => b.id === selectedBranch)?.branch_name}
+              </span>
+            </div>
+            <ChevronDown size={16} className={`text-slate-300 transition-transform duration-300 ${isBranchOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isBranchOpen && (
+            <div className="absolute top-full mt-3 w-full bg-white rounded-[24px] shadow-2xl shadow-slate-200 border border-slate-50 py-3 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <button 
+                onClick={() => { setSelectedBranch('all'); setIsBranchOpen(false); }}
+                className={`w-full px-6 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-colors ${selectedBranch === 'all' ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-400 hover:bg-slate-50'}`}
+              >
+                All Branches
+              </button>
+              {branches.map(b => (
+                <button 
+                  key={b.id}
+                  onClick={() => { setSelectedBranch(b.id); setIsBranchOpen(false); }}
+                  className={`w-full px-6 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-colors ${selectedBranch === b.id ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-400 hover:bg-slate-50'}`}
+                >
+                  {b.branch_name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[40px] shadow-xl shadow-slate-200/40 border border-slate-100/50 flex-1 flex flex-col overflow-hidden relative">
+        <div className="overflow-y-auto flex-1 custom-scrollbar">
+          <table className="w-full text-left border-separate border-spacing-0">
+            <thead className="sticky top-0 bg-white/80 backdrop-blur-md z-10">
+              <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                <th className="py-8 px-10 border-b border-slate-50">Identity Info</th>
+                <th className="py-8 px-10 border-b border-slate-50">Role & Branch</th>
+                <th className="py-8 px-10 text-center border-b border-slate-50">System Level</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredEmployees.length > 0 ? (
-                filteredEmployees.map((emp) => (
+              {filteredEmployees.map((emp) => {
+                const isReadOnly = currentUser?.role === 'supervisor';
+                return (
                   <tr 
                     key={emp.id} 
-                    onClick={() => router.push(`/dashboard/employees/${emp.id}`)} 
-                    className="group cursor-pointer hover:bg-slate-50/50 transition-all"
+                    onClick={() => !isReadOnly && router.push(`/dashboard/employees/${emp.id}`)} 
+                    className={`group transition-all ${isReadOnly ? 'cursor-default' : 'cursor-pointer hover:bg-indigo-50/30'}`}
                   >
-                    <td className="py-5 px-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 font-black group-hover:bg-indigo-600 group-hover:text-white transition-all overflow-hidden">
-                          {emp.avatar_url ? (
-                            <img src={emp.avatar_url} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-lg">{emp.full_name?.charAt(0)}</span>
-                          )}
+                    <td className="py-6 px-10">
+                      <div className="flex items-center gap-6">
+                        <div className="relative shrink-0">
+                          <div className={`w-16 h-16 rounded-[22px] bg-slate-100 flex items-center justify-center overflow-hidden shadow-inner border-2 border-white transition-all group-hover:shadow-lg ${!isReadOnly && 'group-hover:border-indigo-600'}`}>
+                            {emp.avatar_url ? (
+                              // ✅ รูปจะโหลดใหม่เสมอเพราะมี ?t= ต่อท้าย
+                              <img src={emp.avatar_url} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <UserCircle size={28} className="text-slate-300" />
+                            )}
+                          </div>
                         </div>
                         <div>
-                          <p className="text-sm font-black text-slate-800">{emp.full_name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">ID: {emp.login_id}</p>
+                          <p className="text-[15px] font-black text-slate-900 uppercase italic tracking-tighter leading-none">{emp.full_name}</p>
+                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.15em] mt-2">ID: {emp.login_id}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-5 px-6">
-                      <p className="text-sm font-bold text-slate-600">{emp.position || 'Staff'}</p>
-                      <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                        <MapPin size={10}/> {emp.branches?.branch_name || 'ไม่ระบุสาขา'}
-                      </p>
+                    <td className="py-6 px-10">
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-black text-slate-700 uppercase italic leading-none">{emp.position || 'Standard Staff'}</p>
+                        <p className="text-[10px] font-bold text-slate-400 flex items-center gap-2 uppercase tracking-tight">
+                          <MapPin size={12} className="text-indigo-400" /> {emp.branches?.branch_name || 'Global'}
+                        </p>
+                      </div>
                     </td>
-                    <td className="py-5 px-6 text-center">
-                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                        emp.role === 'admin' ? 'bg-red-50 text-red-600' : 
-                        emp.role === 'manager' ? 'bg-amber-50 text-amber-600' : 
-                        'bg-blue-50 text-blue-600'
-                      }`}>
-                        {emp.role}
-                      </span>
+                    <td className="py-6 px-10 text-center">
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${
+                          emp.role === 'admin' ? 'bg-rose-50 border-rose-100' : 
+                          emp.role === 'supervisor' ? 'bg-indigo-50 border-indigo-100' : 
+                          emp.role === 'manager' ? 'bg-amber-50 border-amber-100' : 
+                          'bg-slate-50 border-slate-100'
+                        }`}>
+                        {isReadOnly && <Lock size={10} className="text-slate-300" />}
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${
+                          emp.role === 'admin' ? 'text-rose-600' : 
+                          emp.role === 'supervisor' ? 'text-indigo-600' : 
+                          emp.role === 'manager' ? 'text-amber-600' : 
+                          'text-slate-500'
+                        }`}>
+                          {emp.role}
+                        </span>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="py-20 text-center text-slate-400 font-bold">ไม่พบรายชื่อพนักงาน</td>
-                </tr>
-              )}
+                )
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 20px;
+          border: 2px solid white;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; }
+      `}</style>
     </div>
   )
 }

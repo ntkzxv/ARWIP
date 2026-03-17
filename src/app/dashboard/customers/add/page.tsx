@@ -97,14 +97,15 @@ export default function AddCustomerFullPage() {
         try {
           const { data } = await supabase
             .from('employees') 
-            .select('full_name')
+            .select('id, full_name')
             .eq('login_id', staffId)
             .maybeSingle();
 
           if (data) {
             setFormData((prev: any) => ({
               ...prev,
-              staff_name: data.full_name
+              staff_name: data.full_name,
+              employee_id: data.id
             }));
           }
         } catch (err) {
@@ -299,8 +300,11 @@ const handleSubmit = async () => {
       transaction_type: purchaseType, 
       status: 'success', 
       branch_id: branchId,
-      staff_id: formData.staff_id,
-      staff_name: formData.staff_name
+      
+      // ✅ ดึงทุกอย่างมาจาก formData ที่เราเตรียมไว้จาก staff_id ได้เลย
+      staff_id: formData.staff_id,      // Login ID (เช่น ST001)
+      staff_name: formData.staff_name,  // ชื่อที่ดึงมาอัตโนมัติ
+      employee_id: formData.employee_id // UUID ที่ดึงมาอัตโนมัติ (ไม่ต้องสร้างฟิลด์เพิ่ม)
     }).select().single();
     
     if (saleErr) throw saleErr;
@@ -312,7 +316,7 @@ const handleSubmit = async () => {
         amount: parseFloat(formData.unit_price),
         type: purchaseType === 'cash' ? 'topup' : 'usage',
         status: 'completed',
-        staff_id: formData.staff_id,
+        staff_id: formData.employee_id,
         created_at: new Date().toISOString()
       })
 

@@ -1,11 +1,12 @@
 'use client'
-import { useEffect, useState, use as reactUse } from 'react'
+import { useEffect, useState, use as reactUse, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../../utils/supabase'
+import Cropper from 'react-easy-crop' // 🚩 เพิ่ม Library
 import { 
   ArrowLeft, Edit3, User, ShieldAlert, Loader2, Lock, Eye, EyeOff, 
   Phone, Mail, MapPin, Calendar, Heart, Globe, School, Banknote, 
-  ClipboardCheck, GraduationCap, Briefcase, AlertCircle
+  ClipboardCheck, GraduationCap, Briefcase, AlertCircle, X, Check, ZoomIn
 } from 'lucide-react'
 
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,6 +26,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
+  // 🚩 [เพิ่ม] State สำหรับการ Crop รูปภาพ
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
+  const [showCropModal, setShowCropModal] = useState(false)
+
   useEffect(() => {
     async function init() {
       setLoading(true)
@@ -41,16 +49,66 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
       }
 
       setCurrentUser(curr)
-      setEmployee(emp)
-      setFormData(emp)
-      const names = emp.full_name?.split(' ') || ['', '']
-      setFirstName(names[0]); setLastName(names.slice(1).join(' '))
+      if (emp) {
+        // เติม Timestamp เพื่อล้างแคชรูปภาพเก่า
+        const cachedPhoto = emp.avatar_url ? `${emp.avatar_url}?t=${Date.now()}` : null;
+        setEmployee({ ...emp, avatar_url: cachedPhoto });
+        setFormData(emp);
+        const names = emp.full_name?.split(' ') || ['', '']
+        setFirstName(names[0]); setLastName(names.slice(1).join(' '))
+      }
       setLoading(false)
     }
     init()
   }, [id, router])
 
   const isAdmin = currentUser?.role === 'admin'
+  
+  // 🚩 [เพิ่ม] Logic การเลือกไฟล์และเปิดตัว Crop
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+      const imageDataUrl = URL.createObjectURL(file)
+      setImageSrc(imageDataUrl)
+      setShowCropModal(true)
+    }
+  }
+
+  const onCropComplete = useCallback((_: any, clippedPixels: any) => {
+    setCroppedAreaPixels(clippedPixels)
+  }, [])
+
+  // 🚩 [เพิ่ม] ฟังก์ชันบันทึกรูปที่ Crop แล้ว
+  const handleCropSave = async () => {
+    try {
+      setLoading(true)
+      const croppedImage = await getCroppedImg(imageSrc!, croppedAreaPixels)
+      
+      const fileName = `${id}.jpg`
+      const { error: uploadError } = await supabase.storage
+        .from('avater')
+        .upload(fileName, croppedImage, {
+          contentType: 'image/jpeg',
+          upsert: true
+        })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage.from('avater').getPublicUrl(fileName)
+      
+      // อัปเดต URL ใน Database
+      await supabase.from('employees').update({ avatar_url: publicUrl }).eq('id', id)
+
+      setEmployee({ ...employee, avatar_url: `${publicUrl}?t=${Date.now()}` })
+      setShowCropModal(false)
+      setImageSrc(null)
+      alert('อัปเดตรูปโปรไฟล์สำเร็จ!')
+    } catch (e: any) {
+      alert('เกิดข้อผิดพลาด: ' + e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleFinalSave = async () => {
     if (!isAdmin) return;
@@ -85,9 +143,24 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
     }
     const { error } = await supabase.from('employees').update(updateData).eq('id', id)
     if (!error) {
-      const { data: fresh } = await supabase.from('employees').select('*, branches(branch_name)').eq('id', id).single()
-      setEmployee(fresh); setFormData(fresh); setIsEditing(false); setShowConfirmModal(false); setConfirmPassword('');
-      alert('บันทึกสำเร็จ!');
+      const { data: fresh } = await supabase
+        .from('employees')
+        .select('*, branches(branch_name)')
+        .eq('id', id)
+        .single()
+
+      if (fresh) {
+        // อัปเดต State ในหน้าปัจจุบันทันที
+        setEmployee({
+          ...fresh,
+          avatar_url: fresh.avatar_url ? `${fresh.avatar_url}?t=${Date.now()}` : null
+        });
+        setFormData(fresh);
+        setIsEditing(false);
+        setShowConfirmModal(false);
+        setConfirmPassword('');
+        alert('บันทึกสำเร็จ!');
+      }
     }
   }
 
@@ -105,9 +178,30 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
       <div className="bg-white rounded-[50px] shadow-sm border border-slate-50 overflow-hidden">
         {/* Profile Card Header */}
         <div className="bg-slate-900 p-12 text-white flex flex-col md:flex-row items-center gap-10">
-          <div className="w-40 h-40 bg-slate-800 rounded-[45px] overflow-hidden border-4 border-white/10 flex items-center justify-center shadow-2xl">
-            <User size={80} className="text-slate-600" />
+        {/* 🚀 ส่วนแสดงผลรูปโปรไฟล์ที่มีปุ่มแก้ไข */}
+        <div className="relative group shrink-0">
+          <div className="w-40 h-40 bg-slate-800 rounded-[45px] overflow-hidden border-4 border-white/10 flex items-center justify-center shadow-2xl transition-all group-hover:border-indigo-500/50">
+            {employee.avatar_url ? (
+              <img src={employee.avatar_url} className="w-full h-full object-cover" alt="Profile" />
+            ) : (
+              <User size={80} className="text-slate-600" />
+            )}
           </div>
+          
+          {/* ปุ่มปากกาโผล่มาเฉพาะ Admin */}
+          {isAdmin && (
+            <label className="absolute -bottom-2 -right-2 p-4 bg-indigo-600 text-white rounded-2xl shadow-xl cursor-pointer hover:scale-110 hover:bg-indigo-500 transition-all border-4 border-slate-900">
+              <Edit3 size={20} />
+              {/* เปลี่ยนจาก onChange={handleAvatarUpload} เป็น onFileChange เพื่อเปิด Crop Modal */}
+              <input 
+                type="file" 
+                className="hidden" 
+                accept="image/*" 
+                onChange={onFileChange} 
+              />
+            </label>
+          )}
+        </div>
           <div className="space-y-3">
             <h1 className="text-5xl font-black tracking-tighter uppercase">{employee.full_name}</h1>
             <div className="flex gap-3">
@@ -177,6 +271,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                   <Input label="เงินเดือน" value={formData.salary} type="number" isEditing={isEditing} onChange={(v:any)=>setFormData({...formData, salary:v})} />
                   <Select label="สถานะพนักงาน" value={formData.employment_status} isEditing={isEditing} options={['regular', 'probation', 'contract', 'resigned']} onChange={(v:any)=>setFormData({...formData, employment_status:v})} />
                </div>
+               
             </section>
           )}
 
@@ -189,6 +284,55 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           </div>
         )}
       </div>
+
+      {/* 🚩 Modal สำหรับครอบรูป (Crop UI) */}
+      {showCropModal && (
+        <div className="fixed inset-0 bg-slate-950/95 z-[100] flex flex-col items-center justify-center p-4">
+          <div className="relative w-full max-w-2xl h-[450px] md:h-[550px] bg-slate-900 rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
+            <Cropper
+              image={imageSrc!}
+              crop={crop}
+              zoom={zoom}
+              aspect={1 / 1}
+              onCropChange={setCrop}
+              onCropComplete={onCropComplete}
+              onZoomChange={setZoom}
+            />
+          </div>
+          
+          <div className="mt-8 w-full max-w-md bg-slate-900/50 p-8 rounded-[30px] border border-white/5 backdrop-blur-xl">
+             <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <ZoomIn size={16} className="text-slate-400" />
+                    <input
+                      type="range"
+                      value={zoom}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      onChange={(e) => setZoom(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+                </div>
+                
+                <div className="flex gap-4">
+                   <button 
+                     onClick={() => {setShowCropModal(false); setImageSrc(null);}} 
+                     className="flex-1 py-4 flex items-center justify-center gap-2 bg-white/5 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all hover:bg-white/10"
+                   >
+                     <X size={14} /> ยกเลิก
+                   </button>
+                   <button 
+                     onClick={handleCropSave} 
+                     className="flex-1 py-4 flex items-center justify-center gap-2 bg-indigo-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-xl shadow-indigo-200 hover:bg-indigo-500 transition-all"
+                   >
+                     <Check size={14} /> ยืนยัน
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
@@ -258,4 +402,34 @@ function Select({ label, value, isEditing, options, onChange }: any) {
       )}
     </div>
   )
+}
+
+// 🔧 Helper Function สำหรับประมวลผลรูปที่ครอบ (ใส่ไว้นอก Component)
+async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob> {
+  const image = new Image()
+  image.src = imageSrc
+  await new Promise((resolve) => (image.onload = resolve))
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 800
+  canvas.height = 800
+  const ctx = canvas.getContext('2d')
+
+  if (!ctx) throw new Error("Could not get canvas context")
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    800,
+    800
+  )
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.8)
+  })
 }

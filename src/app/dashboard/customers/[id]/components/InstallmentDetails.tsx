@@ -5,37 +5,44 @@ import {
   Receipt, ArrowLeft, Layers, ShoppingBag, 
   Hash, ArrowRight, Banknote, Box, ChevronRight
 } from 'lucide-react'
-// 🚩 นำเข้า Modal (ปรับ path ตามจริงของคุณ เช่น '@/components/PaymentDetailModal')
 import PaymentDetailModal from '../../../../../components/PaymentDetailModal' 
 
-export default function InstallmentDetails({ contracts }: { contracts: any[] }) {
+export default function InstallmentDetails({ contracts, customerName }: { contracts: any[], customerName?: string }) {
   const [activeContractId, setActiveContractId] = useState<string | null>(null);
-
-  // 🚩 เพิ่ม State สำหรับควบคุม Modal
   const [selectedBill, setSelectedBill] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 🚩 ฟังก์ชันเปิด Modal
   const handleOpenModal = (payment: any, contract: any) => {
+    const checkStatus = () => {
+      if (payment.status === 'paid' || payment.status === 'completed' || !!payment.paid_at) {
+        return 'paid';
+      }
+      return 'pending';
+    };
+
     const enrichedData = {
       ...payment,
-      customer_name: contract.customers?.full_name || 'ไม่ระบุชื่อลูกค้า',
+      status: checkStatus(), 
+      customer_name: customerName || 'ไม่ระบุชื่อลูกค้า',
+      customer_id: contract.customer_id, 
       product_id: contract.sales_transactions?.product_id || 'N/A'
     };
+    
     setSelectedBill(enrichedData);
     setIsModalOpen(true);
   };
 
-  // --- 🟢 หน้าที่ 2: รายการบิลย่อย (Sub-bills) ---
+  // --- 🟢 หน้าที่ 2: รายการบิลย่อย (เมื่อคลิกเลือกสัญญาแล้ว) ---
   if (activeContractId) {
     const selectedContract = contracts.find(c => c.id === activeContractId);
-    if (!selectedContract) return null; // Safety check
+    if (!selectedContract) return null;
 
     const sale = selectedContract?.sales_transactions || {};
     const payments = selectedContract?.installment_payments || [];
 
     const totalPaidAmount = payments
-      .filter((p: any) => p.status === 'paid')
+      .filter((p: any) => p.status === 'paid' || !!p.paid_at)
       .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
     const totalContractAmount = Number(selectedContract.total_purchase_price || 0);
 
@@ -84,45 +91,75 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
 
         <div className="grid grid-cols-1 gap-4">
           {payments.sort((a: any, b: any) => a.installment_number - b.installment_number).map((item: any) => {
-            const isPaid = item.status === 'paid';
-            const isOverdue = new Date(item.due_date) < new Date() && !isPaid;
-            
-            const statusStyles = isPaid ? 'border-emerald-100 bg-emerald-50/20 hover:border-emerald-500' : isOverdue ? 'border-red-100 bg-red-50/10 hover:border-red-500' : 'border-slate-50 bg-white hover:border-blue-500';
-            const priceColor = isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : 'text-slate-800';
+            const isPaid = item.status === 'paid' || item.status === 'completed' || !!item.paid_at;
+            const isLate = isPaid && item.paid_at && item.due_date && new Date(item.paid_at).setHours(0,0,0,0) > new Date(item.due_date).setHours(0,0,0,0);
+            const isOverdue = !isPaid && new Date(item.due_date) < new Date(new Date().setHours(0,0,0,0));
+
+            const statusStyles = isPaid 
+              ? 'border-emerald-100 bg-emerald-50/10 hover:border-emerald-500' 
+              : isOverdue 
+                ? 'border-red-100 bg-red-50/10 hover:border-red-500' 
+                : 'border-amber-100 bg-amber-50/10 hover:border-amber-500';
+
+            const priceColor = isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : 'text-amber-600';
 
             return (
               <div 
                 key={item.id} 
-                // 🚩 เพิ่ม onClick เพื่อเปิด Modal
                 onClick={() => handleOpenModal(item, selectedContract)}
                 className={`flex items-center justify-between p-7 rounded-[40px] border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${statusStyles}`}
               >
                 <div className="flex items-center gap-6">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${isPaid ? 'bg-emerald-500 text-white' : isOverdue ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400'}`}>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${
+                    isPaid ? 'bg-emerald-500 text-white' : isOverdue ? 'bg-red-500 text-white animate-pulse' : 'bg-amber-400 text-white'
+                  }`}>
                     {item.installment_number}
                   </div>
                   <div>
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-500' : isPaid ? 'text-emerald-600' : 'text-slate-400'}`}>
-                        {isOverdue ? 'เกินกำหนดชำระ' : isPaid ? 'ชำระเรียบร้อย' : 'กำหนดชำระ'}: {new Date(item.due_date).toLocaleDateString('th-TH')}
-                    </p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-500' : isPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {isOverdue ? 'เกินกำหนดชำระ' : isPaid ? 'ชำระเรียบร้อย' : 'กำหนดชำระ'}: {new Date(item.due_date).toLocaleDateString('th-TH')}
+                      </p>
+                      {isLate && (
+                          <span className="px-3 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black rounded-full border border-rose-200 uppercase tracking-tighter">
+                            ชำระล่าช้า
+                          </span>
+                        )}
+                      </div>
                     <p className={`text-xl font-black tracking-tighter ${priceColor}`}>
                       ฿{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </p>
                   </div>
                 </div>
+                
                 <div className="flex items-center gap-6">
                   <div className="text-right hidden sm:block">
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500 animate-pulse' : 'text-slate-300'}`}>
-                      {isPaid ? 'ชำระเรียบร้อย' : isOverdue ? 'ค้างชำระ' : 'PENDING'}
-                    </p>
-                    {isPaid && item.paid_at && (
-                      <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase">
-                        เมื่อ: {new Date(item.paid_at).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'})}
+                    {isPaid ? (
+                      <>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                          ชำระเรียบร้อย
+                        </p>
+                        {item.paid_at && (
+                          <p className="text-[9px] text-slate-400 font-bold mt-1 uppercase">
+                            เมื่อ: {new Date(item.paid_at).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'})}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-500' : 'text-amber-600'}`}>
+                        {isOverdue ? 'เกินกำหนด' : 'รอชำระ'}
                       </p>
                     )}
                   </div>
+                  
                   <div className="flex items-center pr-2">
-                    {isPaid ? <CheckCircle2 size={26} className="text-emerald-500" /> : isOverdue ? <AlertCircle size={26} className="text-red-500 animate-pulse" /> : <Clock size={26} className="text-slate-200" />}
+                    {isPaid ? (
+                      <CheckCircle2 size={26} className="text-emerald-500" />
+                    ) : isOverdue ? (
+                      <AlertCircle size={26} className="text-red-500 animate-pulse" />
+                    ) : (
+                      <Clock size={26} className="text-amber-400" />
+                    )}
                   </div>
                 </div>
               </div>
@@ -130,7 +167,6 @@ export default function InstallmentDetails({ contracts }: { contracts: any[] }) 
           })}
         </div>
 
-        {/* 🚩 ส่วนแสดง Modal ลอยทับหน้าจอเมื่อมีการเลือกบิล */}
         {isModalOpen && (
           <PaymentDetailModal item={selectedBill} onClose={() => setIsModalOpen(false)} />
         )}
