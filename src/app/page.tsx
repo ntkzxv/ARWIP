@@ -1,116 +1,92 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../utils/supabase' 
-import { Loader2 } from 'lucide-react'
 
 export default function RootPage() {
   const router = useRouter()
+  const [isAnimate, setIsAnimate] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
   
-  // 🚩 อัปเดตลิ้งค์ Logo ใหม่ที่คุณส่งมา
   const logoUrl = "https://yksehgfsltzngnhqrdiv.supabase.co/storage/v1/object/sign/image/arwipLogo%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lMDllMzQzNy0zMDk4LTRhOTctYmUwMy03Njg5YzYyMGYxODEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZS9hcndpcExvZ28gKDEpLnBuZyIsImlhdCI6MTc3MzU3OTA0NiwiZXhwIjoxODA1MTE1MDQ2fQ.LQOV5fqAv3TICvAUGW0mqTm3YiUO67OrfIHU0m7onHI"
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
+    setIsAnimate(true)
+    
+    // หน่วงเวลาโชว์ Splash Screen
+    const timer = setTimeout(() => {
+      setIsExiting(true) // 🚩 เริ่มแอนิเมชันตอนออก
+      
+      setTimeout(() => {
+        const savedUserId = localStorage.getItem('current_user_id')
+        if (savedUserId) {
+          router.replace('/portal')
+        } else {
+          router.replace('/login')
+        }
+      }, 1200); // 🚩 ให้เวลา Bloom Exit ทำงานสวยๆ
+    }, 2800); 
 
-        // หน่วงเวลา 10 วินาที เพื่อสร้างบรรยากาศระบบความปลอดภัย
-        setTimeout(() => {
-          if (session) {
-            router.replace('/dashboard')
-          } else {
-            router.replace('/login')
-          }
-        }, 10000);
-
-      } catch (error) {
-        console.error('Auth error:', error)
-        setTimeout(() => router.replace('/login'), 10000);
-      }
-    }
-
-    checkAuth()
+    return () => clearTimeout(timer)
   }, [router])
 
   return (
-    <div className="min-h-screen bg-[#f4f7fe] flex flex-col items-center justify-center p-6 overflow-hidden">
+    // 🚩 พื้นหลังมืดสนิท (Slate-950)
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center overflow-hidden">
       
-      {/* 🌌 Ambient Background Glow - ขยายรัศมีแสงให้กว้างขึ้น */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-indigo-500/10 blur-[200px] rounded-full"></div>
-
-      <div className="text-center space-y-16 relative z-10">
+      {/* 🌌 Main Wrapper: ค่อยๆ จางหายไปแบบ "ระเบิดตัว" (Bloom Exit) */}
+      <div className={`relative w-full h-full min-h-screen flex items-center justify-center transition-all duration-[1200ms] cubic-bezier(0.4, 0, 0.2, 1)
+        ${isExiting ? 'opacity-0 scale-[1.15] blur-xl' : 'opacity-100 scale-100 blur-0'}
+      `}>
         
-        {/* 🚩 Huge Logo Section - No Border */}
-        <div className="relative inline-flex flex-col items-center">
+        {/* 🪐 1. Background Mesh Glow: แสงฟุ้งหลายชั้นแก้ปัญหาแสงแตก (Mesh) */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+           {/* แสงสีคราม (Indigo) หลัก */}
+           <div className={`absolute -top-1/4 -left-1/4 w-full h-full bg-indigo-900/10 blur-[200px] rounded-full transition-all duration-[3000ms] ${isAnimate ? 'scale-150 opacity-100' : 'scale-0 opacity-0'}`}></div>
+           {/* แสงสีม่วง (Violet) อ่อนๆ */}
+           <div className={`absolute -bottom-1/4 -right-1/4 w-full h-full bg-violet-900/5 blur-[200px] rounded-full transition-all duration-[3500ms] delay-500 ${isAnimate ? 'scale-150 opacity-100' : 'scale-0 opacity-0'}`}></div>
+           {/* แสงสีฟ้า (Cyan) จางๆ ตรงกลาง */}
+           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 h-1/2 bg-cyan-950/2 blur-[200px] rounded-full transition-all duration-[2000ms] ${isAnimate ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}></div>
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center">
           
-          <div className="relative mb-12 group animate-mega-float">
-            {/* รัศมีแสงด้านหลัง (Aura) ช่วยขับให้โลโก้มองเห็นชัดบนพื้นหลังสว่าง */}
+          {/* 🖼️ Logo Section */}
+          <div className="relative flex items-center justify-center">
+            {/* 🌟 2. Immediate Logo Bloom: แสงฟุ้งตรงโลโก้ ปรับให้เนียนขึ้นมาก */}
+            <div className={`absolute w-[400px] h-[400px] bg-indigo-500/15 blur-[160px] rounded-full transition-all duration-[2500ms] ease-out
+              ${isAnimate ? 'scale-[2.8] opacity-100' : 'scale-0 opacity-0'}
+            `}></div>
             
-            {/* 🖼️ Logo ใหม่ขนาดใหญ่พิเศษ */}
             <img 
               src={logoUrl} 
               alt="ARWIP Logo" 
-              className="w-1500 h-96 object-contain drop-shadow-[0_25px_10px_rgba(0,0,0,0.25)] transition-transform duration-1000 group-hover:scale-110"
+              className="w-80 h-auto md:w-[550px] object-contain relative z-10 drop-shadow-[0_0_30px_rgba(255,255,255,0.05)]"
             />
           </div>
-          
-          {/* Typography Section */}
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black italic tracking-tighter text-slate-900 uppercase leading-none">
-                AI-Powered Retail & Warehouse
-              </h1>
-              <p className="text-indigo-600 font-black text-xl md:text-2xl uppercase tracking-[0.15em] italic">
-                Management System
-              </p>
-            </div>
-            
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] ml-[0.6em]">
-                Integrated Installment Payment
-              </p>
-              <div className="h-[4px] w-32 bg-gradient-to-r from-transparent via-indigo-600 to-transparent rounded-full opacity-40"></div>
-            </div>
+
+          {/* 🔡 Status Message */}
+          <div className="mt-20 flex flex-col items-center gap-4">
+             <div className={`transition-all duration-1000 delay-800 flex flex-col items-center gap-4
+               ${isAnimate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}
+             `}>
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-[1.4em] ml-[1.4em]">
+                  Neural Link Initializing
+                </span>
+                <div className="w-44 h-[1px] bg-white/5 relative overflow-hidden rounded-full">
+                   <div className="absolute inset-y-0 left-0 bg-indigo-500/60 animate-slow-load rounded-full"></div>
+                </div>
+             </div>
           </div>
         </div>
-
-        {/* Status Loading Section */}
-        <div className="flex flex-col items-center gap-8">
-          <div className="flex items-center gap-4 px-12 py-6 bg-white/40 backdrop-blur-xl rounded-[3.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] border border-white/60 transition-all hover:bg-white/80">
-            <Loader2 size={26} className="animate-spin text-indigo-600" />
-            <span className="text-[15px] font-black text-slate-800 uppercase tracking-[0.3em]">
-              Securing Neural Interface...
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* ⏳ Bottom Progress Bar (10 Seconds) */}
-      <div className="fixed bottom-16 flex flex-col items-center gap-4 w-full max-w-[450px] px-10">
-         <div className="w-full h-1.5 bg-slate-200/50 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
-            <div className="h-full bg-indigo-600 animate-progress shadow-[0_0_20px_rgba(79,70,229,0.8)]"></div>
-         </div>
-         <div className="flex justify-between w-full text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] px-2">
-            <span className="animate-pulse">Analyzing...</span>
-            <span className="text-indigo-500">v3.0.01</span>
-         </div>
       </div>
 
       <style jsx>{`
-        @keyframes mega-float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-35px) rotate(2deg); }
+        @keyframes slow-load {
+          0% { width: 0%; left: -100%; }
+          100% { width: 100%; left: 100%; }
         }
-        @keyframes progress {
-          0% { width: 0%; }
-          100% { width: 100%; }
-        }
-        .animate-mega-float {
-          animation: mega-float 7s ease-in-out infinite;
-        }
-        .animate-progress {
-          animation: progress 10s linear forwards;
+        .animate-slow-load {
+          animation: slow-load 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
       `}</style>
     </div>

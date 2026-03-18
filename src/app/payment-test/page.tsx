@@ -118,7 +118,7 @@ export default function PaymentTestPage() {
             </div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">Simulator</h1>
           </div>
-          <Link href="/dashboard" className="px-5 py-2.5 bg-white rounded-xl border font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">Dashboard</Link>
+          <Link href="/datacenter/dashboard" className="px-5 py-2.5 bg-white rounded-xl border font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">Dashboard</Link>
         </div>
 
         {/* ส่วนแสดงรายชื่อลูกค้า (ถ้ายังไม่ได้เลือกใคร) */}

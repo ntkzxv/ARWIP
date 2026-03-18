@@ -40,11 +40,11 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
       const { data: curr } = await supabase.from('employees').select('*').eq('id', savedUserId).single()
       const { data: emp } = await supabase.from('employees').select('*, branches(branch_name)').eq('id', id).single()
       
-      if (!emp || !curr) { router.push('/dashboard/employees'); return }
+      if (!emp || !curr) { router.push('/datacenter/employees'); return }
 
       if (curr.role === 'manager' && emp.branch_id !== curr.branch_id) {
         alert('สิทธิ์ปฏิเสธ: คุณไม่สามารถเข้าดูพนักงานนอกสาขาที่สังกัดได้');
-        router.push('/dashboard/employees');
+        router.push('/datacenter/employees');
         return
       }
 
@@ -86,7 +86,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
       
       const fileName = `${id}.jpg`
       const { error: uploadError } = await supabase.storage
-        .from('avater')
+        .from('avatar')
         .upload(fileName, croppedImage, {
           contentType: 'image/jpeg',
           upsert: true
@@ -94,7 +94,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
 
       if (uploadError) throw uploadError
 
-      const { data: { publicUrl } } = supabase.storage.from('avater').getPublicUrl(fileName)
+      const { data: { publicUrl } } = supabase.storage.from('avatar').getPublicUrl(fileName)
       
       // อัปเดต URL ใน Database
       await supabase.from('employees').update({ avatar_url: publicUrl }).eq('id', id)

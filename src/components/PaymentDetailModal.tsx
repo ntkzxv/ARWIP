@@ -129,7 +129,7 @@ export default function PaymentDetailModal({ item, onClose }: { item: any, onClo
               <button 
                 onClick={() => {
                   if (item.customer_id) {
-                    router.push(`/dashboard/customers/${item.customer_id}?tab=personal`);
+                    router.push(`/datacenter/customers/${item.customer_id}?tab=personal`);
                     onClose();
                   } else {
                     alert("ไม่พบข้อมูลรหัสลูกค้า");

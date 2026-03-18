@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, memo } from 'react'
 import { 
   Search, History, ClockAlert, 
-  ChevronLeft, ChevronRight, Calendar, Loader2, X, Users 
+  ChevronLeft, ChevronRight, Calendar, X, Users 
 } from 'lucide-react'
 import { supabase } from '../../../utils/supabase'
 
@@ -16,7 +16,7 @@ export default function CreditHistoryPage() {
   const [data, setData] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [activeTab, setActiveTab] = useState('recent') // recent, overdue, total_debt
+  const [activeTab, setActiveTab] = useState('recent') 
   const [totalCount, setTotalCount] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string>('') 
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -157,15 +157,16 @@ export default function CreditHistoryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm">
         <div className="lg:col-span-4 relative group">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-          <input type="text" placeholder="ค้นหาชื่อลูกค้า..." value={searchTerm} onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}} className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm outline-none font-bold" />
+          <input type="text" placeholder="ค้นหาชื่อลูกค้า..." value={searchTerm} onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}} className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm outline-none font-bold italic" />
         </div>
+        
         <div className="lg:col-span-5 px-2">
             <div className="flex justify-between mb-2.5 px-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Analysis Status</span>
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider italic">Analysis Status</span>
                 <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">Paid</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-600" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">Overdue</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">Total</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight italic">Paid</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-600" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight italic">Overdue</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight italic">Total</span></div>
                 </div>
             </div>
             <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
@@ -174,9 +175,10 @@ export default function CreditHistoryPage() {
                 <div style={{ width: '30%' }} className="h-full bg-indigo-500" />
             </div>
         </div>
+
         <div className="lg:col-span-3 relative">
           <input type="date" ref={dateInputRef} className="absolute opacity-0 pointer-events-none" onChange={(e) => {setSelectedDate(e.target.value); setCurrentPage(1);}} />
-          <button onClick={() => dateInputRef.current?.showPicker()} className={`w-full h-[54px] flex items-center justify-center gap-3 px-6 rounded-2xl font-black text-[10px] uppercase shadow-lg active:scale-95 relative ${selectedDate ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+          <button onClick={() => dateInputRef.current?.showPicker()} className={`w-full h-[54px] flex items-center justify-center gap-3 px-6 rounded-2xl font-black text-[10px] uppercase shadow-lg active:scale-95 relative transition-all italic ${selectedDate ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
             <Calendar size={16} />
             <span>{selectedDate ? new Date(selectedDate).toLocaleDateString('th-TH') : 'เลือกวันที่'}</span>
             {selectedDate && <X size={14} className="ml-2" onClick={(e) => {e.stopPropagation(); setSelectedDate('');}} />}
@@ -188,12 +190,9 @@ export default function CreditHistoryPage() {
       <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
         <div className="flex-1">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-[500px] text-slate-300 gap-4">
-              <Loader2 className="animate-spin" size={40} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Data...</p>
-            </div>
+            <SkeletonTable rows={rowsPerPage} />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto animate-in fade-in duration-500">
               {activeTab === 'recent' && <RecentTable data={data} onRowClick={() => {}} />}
               {activeTab === 'overdue' && <OverdueTable data={data} onRowClick={() => {}} />}
               {activeTab === 'total_debt' && <TotalDebtTable data={data} />}
@@ -204,13 +203,13 @@ export default function CreditHistoryPage() {
         {/* Pagination */}
         <div className="p-10 bg-slate-50/30 border-t border-slate-50 flex items-center justify-end">
           <div className="flex items-center gap-2">
-            <button disabled={currentPage === 1} onClick={() => {setCurrentPage(p => p - 1); scrollToTop();}} className="w-12 h-12 flex items-center justify-center rounded-[18px] border bg-white disabled:opacity-30"><ChevronLeft size={18}/></button>
+            <button disabled={currentPage === 1} onClick={() => {setCurrentPage(p => p - 1); scrollToTop();}} className="w-12 h-12 flex items-center justify-center rounded-[18px] border bg-white disabled:opacity-30 active:scale-90 transition-all"><ChevronLeft size={18}/></button>
             <div className="flex gap-2">
               {[...Array(totalPages)].map((_, i) => (
-                <button key={i} onClick={() => {setCurrentPage(i+1); scrollToTop();}} className={`w-12 h-12 rounded-[18px] font-black text-sm transition-all ${currentPage === i+1 ? 'bg-slate-900 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-100'}`}>{i+1}</button>
+                <button key={i} onClick={() => {setCurrentPage(i+1); scrollToTop();}} className={`w-12 h-12 rounded-[18px] font-black text-sm transition-all ${currentPage === i+1 ? 'bg-slate-900 text-white shadow-lg scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`}>{i+1}</button>
               ))}
             </div>
-            <button disabled={currentPage === totalPages} onClick={() => {setCurrentPage(p => p + 1); scrollToTop();}} className="w-12 h-12 flex items-center justify-center rounded-[18px] border bg-white disabled:opacity-30"><ChevronRight size={18}/></button>
+            <button disabled={currentPage === totalPages} onClick={() => {setCurrentPage(p => p + 1); scrollToTop();}} className="w-12 h-12 flex items-center justify-center rounded-[18px] border bg-white disabled:opacity-30 active:scale-90 transition-all"><ChevronRight size={18}/></button>
           </div>
         </div>
       </div>
@@ -218,9 +217,33 @@ export default function CreditHistoryPage() {
   )
 }
 
+// 🚩 Skeleton Component สำหรับ Table
+function SkeletonTable({ rows }: { rows: number }) {
+  return (
+    <div className="w-full animate-pulse">
+      {/* Skeleton Header */}
+      <div className="grid grid-cols-5 gap-4 p-8 bg-slate-50 border-bottom border-slate-100">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-3 bg-slate-200 rounded-full w-24"></div>
+        ))}
+      </div>
+      {/* Skeleton Rows */}
+      {[...Array(rows)].map((_, i) => (
+        <div key={i} className="grid grid-cols-5 gap-4 p-8 border-b border-slate-50 items-center">
+          <div className="h-4 bg-slate-100 rounded-lg w-40"></div>
+          <div className="h-3 bg-slate-50 rounded-full w-28"></div>
+          <div className="h-3 bg-slate-50 rounded-full w-20"></div>
+          <div className="h-3 bg-slate-50 rounded-full w-24"></div>
+          <div className="h-8 bg-slate-50 rounded-xl w-10 justify-self-end"></div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function CategoryBtn({ active, label, icon: Icon, onClick, activeColor }: any) {
   return (
-    <button onClick={onClick} className={`px-8 py-3.5 rounded-[1.2rem] text-[11px] font-black uppercase flex items-center gap-3 transition-all duration-300 ${active ? `bg-white ${activeColor} shadow-md` : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}>
+    <button onClick={onClick} className={`px-8 py-3.5 rounded-[1.2rem] text-[11px] font-black uppercase flex items-center gap-3 transition-all duration-300 ${active ? `bg-white ${activeColor} shadow-md scale-105` : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}>
       <Icon size={16} /> {label}
     </button>
   )

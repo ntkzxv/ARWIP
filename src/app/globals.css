@@ -2,3 +2,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ล็อคความสูงขั้นต่ำของโซนแสดงชื่อพนักงานใน Sidebar */
+.user-info-area {
+  min-height: 40px; /* จองพื้นที่ไว้เลย */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ถ้า Role ยังไม่มา ให้คงบรรทัดว่างไว้ ไม่ให้มันหดตัว */
+.user-role-text:empty::before {
+  content: " ";
+  white-space: pre;
+}

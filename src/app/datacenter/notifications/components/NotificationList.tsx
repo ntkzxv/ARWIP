@@ -63,7 +63,7 @@ export default function NotificationList({ items, activeTab, onItemClick, onRefr
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                  <span className={`${isUpcoming ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-rose-50 text-rose-600 border-rose-100'} text-[10px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-tight`}>
+                  <span className={`${isUpcoming ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-rose-50 text-rose-600 border-rose-100'} text-[10px] font-black px-2.5 py-1 rounded-full border uppercase tracking-tight`}>
                     {isUpcoming ? 'ใกล้ครบกำหนด' : `ค้างสะสม ${item.total_overdue_count || 0} งวด`}
                   </span>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Ref: {item.installment_contracts?.sales_transactions?.product_id || 'N/A'}</span>
@@ -72,7 +72,7 @@ export default function NotificationList({ items, activeTab, onItemClick, onRefr
                   {item.installment_contracts?.customers?.full_name}
                 </h3>
                 <div className="flex items-center gap-3 mt-1.5">
-                   <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter shadow-inner">
+                   <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter">
                       <Box size={11} className="text-slate-400" />
                       {item.installment_contracts?.sales_transactions?.product_name}
                    </span>

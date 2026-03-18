@@ -412,7 +412,7 @@ const handleSubmit = async () => {
       timer: 2000
     });
 
-    router.push('/dashboard/customers');
+    router.push('/datacenter/customers');
 
   } catch (e: any) {
     console.error("Submit Error:", e);
