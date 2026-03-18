@@ -1,23 +1,15 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
-      remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: 'yksehgfsltzngnhqrdiv.supabase.co',
-          port: '',
-          pathname: '/storage/v1/object/public/**', // หรือใช้ '/**' เพื่ออนุญาตทุกอย่างใน host นี้
-        },
-        // แถมอันนี้เผื่อไว้สำหรับ Signed URL ที่คุณใช้อยู่
-        {
-          protocol: 'https',
-          hostname: 'yksehgfsltzngnhqrdiv.supabase.co',
-          port: '',
-          pathname: '/storage/v1/object/sign/**',
-        },
-      ],
-    },
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ypmsrjhflwpdmfrqgupa.supabase.co', // Hostname จาก Error ของคุณ
+        port: '',
+        pathname: '/storage/v1/object/**', // อนุญาตทุกอย่างใน Storage
+      },
+    ],
+  },
 };
 
 export default nextConfig;
