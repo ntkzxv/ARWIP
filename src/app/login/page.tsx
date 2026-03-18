@@ -39,6 +39,7 @@ export default function LoginPage() {
       const { data: employee, error } = await supabase
         .from('employees')
         .select('*')
+        
         .eq('login_id', loginId)
         .single()
 

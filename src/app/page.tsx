@@ -7,7 +7,7 @@ export default function RootPage() {
   const [isAnimate, setIsAnimate] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   
-  const logoUrl = "https://yksehgfsltzngnhqrdiv.supabase.co/storage/v1/object/sign/image/arwipLogo%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lMDllMzQzNy0zMDk4LTRhOTctYmUwMy03Njg5YzYyMGYxODEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZS9hcndpcExvZ28gKDEpLnBuZyIsImlhdCI6MTc3MzU3OTA0NiwiZXhwIjoxODA1MTE1MDQ2fQ.LQOV5fqAv3TICvAUGW0mqTm3YiUO67OrfIHU0m7onHI"
+  const logoUrl = "https://ypmsrjhflwpdmfrqgupa.supabase.co/storage/v1/object/sign/image/arwipLogo%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV84ODc1YjdjMy05NjY2LTQyOTEtYjY3Zi04YjVlZTU5NDg4Y2EiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZS9hcndpcExvZ28gKDEpLnBuZyIsImlhdCI6MTc3MzgyMzU3NywiZXhwIjoxODA1MzU5NTc3fQ.2iJTOFAEuPTqCigx6qttkv3azCcE5lZlnYeyoZG43Vs"
 
   useEffect(() => {
     setIsAnimate(true)

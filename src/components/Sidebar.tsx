@@ -63,7 +63,7 @@ export default function Sidebar() {
     { label: 'Warehouse Control', items: [{ icon: Box, label: t.stock, path: '/datacenter/inventory' }, { icon: Truck, label: t.move, path: '/datacenter/inventory/movement' }, { icon: ClipboardCheck, label: t.audit, path: '/datacenter/inventory/inspection' }] }
   ]
 
-  const logoUrl = "https://yksehgfsltzngnhqrdiv.supabase.co/storage/v1/object/sign/image/arwipLogo%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lMDllMzQzNy0zMDk4LTRhOTctYmUwMy03Njg5YzYyMGYxODEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZS9hcndpcExvZ28gKDEpLnBuZyIsImlhdCI6MTc3MzY4NDk2OCwiZXhwIjoxODA1MjIwOTY4fQ.OAWMDYjIv_B2u8Q18VZiNCYRJpqpWReTpnqkT7xBSVU"
+  const logoUrl = "https://ypmsrjhflwpdmfrqgupa.supabase.co/storage/v1/object/sign/image/arwipLogo%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV84ODc1YjdjMy05NjY2LTQyOTEtYjY3Zi04YjVlZTU5NDg4Y2EiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZS9hcndpcExvZ28gKDEpLnBuZyIsImlhdCI6MTc3MzgyMzU0NiwiZXhwIjoxODA1MzU5NTQ2fQ.sTKwR819CKBNuZkzYTn0-CmIN8hCctaRVyx1locBVek"
 
   const handleToggleMinimize = () => {
     setIsMinimized(!isMinimized)
