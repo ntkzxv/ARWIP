@@ -19,7 +19,9 @@ export default function Sidebar() {
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   const [isMinimized, setIsMinimized] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
-  const [lang, setLang] = useState<'th' | 'en'>('en')
+  
+  // 🚩 1. ตั้งค่าเริ่มต้นเป็นภาษาไทย
+  const [lang, setLang] = useState<'th' | 'en'>('th')
 
   const fetchUser = async () => {
     const savedUserId = localStorage.getItem('current_user_id')
@@ -39,6 +41,13 @@ export default function Sidebar() {
 
   useEffect(() => {
     fetchUser()
+
+    // 🚩 2. ดึงภาษาที่เคยเลือกไว้จาก localStorage
+    const savedLang = localStorage.getItem('app_lang') as 'th' | 'en'
+    if (savedLang) {
+      setLang(savedLang)
+    }
+
     const savedUserId = localStorage.getItem('current_user_id')
     if (!savedUserId) return
     const channel = supabase
@@ -48,6 +57,13 @@ export default function Sidebar() {
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])
+
+  // 🚩 3. ฟังก์ชันสลับภาษาพร้อมบันทึกค่า
+  const toggleLanguage = () => {
+    const newLang = lang === 'en' ? 'th' : 'en'
+    setLang(newLang)
+    localStorage.setItem('app_lang', newLang)
+  }
 
   const translations = {
     en: { dashboard: 'Dashboard Overview', hub: 'Module Hub', employees: 'Employee Team', branches: 'Branch Units', customers: 'Customer List', history: 'Credit History', notif: 'Notifications', behavior: 'Payment Behavior', risk: 'Risk Analysis', perf: 'Performance', forecast: 'Forecast Analysis', stock: 'Stock Inventory', move: 'Stock Movement', audit: 'PDI Inspection', account: 'Account Settings', logout: 'Log out system', lang: 'Switch to Thai' },
@@ -140,7 +156,7 @@ export default function Sidebar() {
             className={`flex items-center justify-center gap-3 h-9 rounded-xl bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all duration-300 group ${isMinimized ? 'w-10 order-1' : 'flex-1 order-1'}`}
           >
             <LayoutGrid size={16} className="group-hover:rotate-90 transition-transform duration-500" />
-            {!isMinimized && <span className="text-[10px] font-black uppercase tracking-[0.1em] leading-none">{t.hub}</span>}
+            {!isMinimized && <span className="text-[10px] font-bold uppercase tracking-[0.1em] leading-none">{t.hub}</span>}
           </button>
 
           <button 
@@ -154,7 +170,6 @@ export default function Sidebar() {
         <div className="w-full space-y-2">
           {isMinimized && <div className="mx-auto w-6 border-t border-white/10 mb-2" />}
 
-          {/* 🚩 แก้ไขส่วนนี้: ล็อคความสูงเพื่อไม่ให้ดีด (Fixed Container) */}
           <button 
             onClick={() => isMinimized ? handleToggleMinimize() : setIsAccountOpen(!isAccountOpen)}
             className={`flex items-center transition-all duration-500 overflow-hidden ${
@@ -171,17 +186,15 @@ export default function Sidebar() {
               {userAvatar ? (
                 <img src={userAvatar} className="w-full h-full object-cover" alt="Profile" />
               ) : (
-                <span className="text-white font-black text-sm uppercase italic">{userName.charAt(0)}</span>
+                <span className="text-white font-bold text-sm uppercase italic">{userName.charAt(0)}</span>
               )}
             </div>
 
             {!isMinimized && (
-              /* ล็อคความสูง h-9 เพื่อจองพื้นที่ไว้ */
               <div className="min-w-0 flex-1 text-left h-9 flex flex-col justify-center">
                 <p className="text-[8px] font-bold text-slate-500 uppercase mb-0.5 tracking-widest leading-none">System Access</p>
                 <div className="min-h-[14px] flex items-center">
                   {!userRole && userName === 'User' ? (
-                    /* แสดงแถบจางๆ ขณะโหลดในพื้นที่ที่จองไว้ */
                     <div className="w-16 h-2 bg-white/10 rounded-full animate-pulse" />
                   ) : (
                     <p className="text-[11px] font-bold text-white uppercase truncate tracking-tight animate-in fade-in duration-700">
@@ -199,13 +212,13 @@ export default function Sidebar() {
             )}
           </button>
 
-          {/* Smooth Grid Account Menu */}
           {!isMinimized && (
             <div className={`grid transition-all duration-500 ease-in-out ${isAccountOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
               <div className="overflow-hidden px-1 space-y-1">
-                <button onClick={() => setLang(lang === 'en' ? 'th' : 'en')} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-indigo-400 hover:bg-white/5 hover:text-indigo-300 text-[10px] font-black uppercase tracking-wider transition-all"><Languages size={14} /> {t.lang}</button>
-                <button onClick={() => router.push('/portal/settings')} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 text-[10px] font-black uppercase tracking-wider transition-all"><Settings size={14} /> {t.account}</button>
-                <button onClick={() => { localStorage.clear(); window.location.href = '/login' }} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-400/60 hover:text-red-400 hover:bg-rose-500/5 text-[10px] font-black uppercase tracking-wider transition-all"><LogOut size={14} /> {t.logout}</button>
+                {/* 🚩 แก้ไขจุดเรียกใช้ฟังก์ชัน toggleLanguage */}
+                <button onClick={toggleLanguage} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-indigo-400 hover:bg-white/5 hover:text-indigo-300 text-[10px] font-bold uppercase tracking-wider transition-all"><Languages size={14} /> {t.lang}</button>
+                <button onClick={() => router.push('/portal/settings')} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 text-[10px] font-bold uppercase tracking-wider transition-all"><Settings size={14} /> {t.account}</button>
+                <button onClick={() => { localStorage.clear(); window.location.href = '/login' }} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-400/60 hover:text-red-400 hover:bg-rose-500/5 text-[10px] font-bold uppercase tracking-wider transition-all"><LogOut size={14} /> {t.logout}</button>
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 'use client'
-import Sidebar from '../../components/SidebarDatacenter'
+import Sidebar from '../../components/SidebarWarehouse'
 
 export default function DatacenterLayout({
   children,
