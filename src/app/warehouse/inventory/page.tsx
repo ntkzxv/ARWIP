@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react' // 🚩 เพิ่ม Suspense
 import { supabase } from '../../../utils/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
@@ -10,13 +10,13 @@ import ProductDetailDrawer from './components/ProductDetailDrawer'
 import Link from 'next/link'
 import InventorySkeleton from '../../../components/skeletons/InventorySkeleton'
 
-export default function InventoryMasterPage() {
+// 🚩 แยกเนื้อหาที่มีการใช้ useSearchParams ออกมาเป็นฟังก์ชันย่อย
+function InventoryContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   // --- States ---
   const [products, setProducts] = useState<any[]>([])
-  // 🚩 ปรับโครงสร้างเก็บสาขาเป็น Object เพื่อเอา ID ไปกรองได้แม่นยำ
   const [branches, setBranches] = useState<any[]>([{ id: 'all', branch_name: 'ทุกสาขารวม' }])
   const [loading, setLoading] = useState(true)
   const [openCategories, setOpenCategories] = useState<string[]>([])
@@ -26,7 +26,6 @@ export default function InventoryMasterPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด')
-  // 🚩 เก็บเป็น Object สาขาที่เลือก
   const [selectedBranch, setSelectedBranch] = useState<any>({ id: 'all', branch_name: 'ทุกสาขารวม' })
   const [filterStatus, setFilterStatus] = useState<'all' | 'low' | 'out'>('all')
   const [searchCategoryTerm, setSearchCategoryTerm] = useState('')
@@ -64,7 +63,6 @@ export default function InventoryMasterPage() {
   const initialFetch = async () => {
     setLoading(true)
     try {
-      // 🚩 ดึงข้อมูลสินค้าพร้อมยอดคงเหลือจากตาราง inventory ทุกแถวที่ผูกอยู่
       const [productRes, branchRes] = await Promise.all([
         supabase.from('products').select('*, inventory(quantity, branch_id, min_stock)').order('category', { ascending: true }),
         supabase.from('branches').select('id, branch_name').order('branch_name', { ascending: true })
@@ -82,21 +80,16 @@ export default function InventoryMasterPage() {
     setTimeout(() => setLoading(false), 600)
   }
 
-  // --- 🚀 Logic การกรองและการคำนวณยอด (รักษา UI เดิม) ---
   const filteredProducts = useMemo(() => {
     return products.map(p => {
-      // 🚩 คำนวณยอดสต็อกตามเงื่อนไขสาขาที่เลือก
       let displayQty = 0;
       let minStockForCheck = p.min_stock || 0;
 
       if (selectedBranch.id === 'all') {
-        // ทุกสาขารวม: รวม quantity จากทุกแถวใน inventory
         displayQty = p.inventory?.reduce((acc: number, inv: any) => acc + (inv.quantity || 0), 0) || 0;
       } else {
-        // เฉพาะสาขา: หาแถวที่ตรงกับ branch_id ที่เลือก
         const branchInv = p.inventory?.find((inv: any) => inv.branch_id === selectedBranch.id);
         displayQty = branchInv?.quantity || 0;
-        // ถ้าในแถว inventory มี min_stock เฉพาะสาขา ให้ใช้ค่านั้น ถ้าไม่มีใช้ค่ากลางจาก products
         minStockForCheck = branchInv?.min_stock ?? p.min_stock ?? 0;
       }
 
@@ -106,7 +99,6 @@ export default function InventoryMasterPage() {
                            p.product_code.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'ทั้งหมด' || p.category === selectedCategory;
       
-      // กรองสถานะสต็อก
       let matchesStatus = true;
       if (filterStatus === 'low') matchesStatus = p.current_display_qty > 0 && p.current_display_qty <= p.current_min_stock;
       if (filterStatus === 'out') matchesStatus = p.current_display_qty <= 0;
@@ -146,7 +138,6 @@ export default function InventoryMasterPage() {
   return (
     <div className="max-w-[98%] mx-auto space-y-6 pb-20 text-slate-900 bg-[#F4F7FE] min-h-screen p-10 animate-in fade-in duration-700 font-sans">
       
-      {/* 🚀 Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-5xl font-bold tracking-tighter text-slate-900 leading-none">
@@ -176,7 +167,6 @@ export default function InventoryMasterPage() {
       ) : (
         <div className="space-y-6 animate-in fade-in duration-500">
           
-          {/* 🔍 Search & Advanced Filter */}
           <div className="flex gap-4 mb-4">
             <div className="relative flex-1 group">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
@@ -203,7 +193,6 @@ export default function InventoryMasterPage() {
                 <div className="absolute right-0 mt-3 w-[600px] bg-white border border-slate-100 shadow-[0_25px_70px_rgba(0,0,0,0.15)] rounded-[2.5rem] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                   <div className="flex divide-x divide-slate-50">
                     
-                    {/* 🚩 คอลัมน์ 1: สาขา (ใช้ Object) */}
                     <div className="flex-1 p-7 bg-slate-50/20">
                       <p className="text-[9px] text-slate-300 uppercase tracking-widest mb-5 font-bold flex items-center gap-2">
                         <MapPin size={10} /> เลือกสาขา
@@ -271,7 +260,6 @@ export default function InventoryMasterPage() {
             </div>
           </div>
 
-          {/* 📋 Table Content */}
           <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden text-slate-600">
             <div className="grid grid-cols-12 p-8 border-b border-slate-50 bg-slate-50/30 text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] px-14">
               <div className="col-span-12">โครงสร้างหมวดหมู่มาสเตอร์</div>
@@ -321,7 +309,6 @@ export default function InventoryMasterPage() {
                                <p className="text-sm font-bold text-slate-600 group-hover/item:text-indigo-700 transition-colors">{p.name}</p>
                                <div className="flex items-center gap-2 mt-1">
                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1 border-l-2 border-indigo-200">SKU: {p.product_code}</p>
-                                 {/* 🚩 โชว์สาขาเฉพาะถ้าเลือกสาขาไว้ เพื่อให้รู้ว่าเป็นของที่ไหน */}
                                  {selectedBranch.id !== 'all' && (
                                    <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2 rounded flex items-center gap-1"><MapPin size={8}/> {selectedBranch.branch_name}</p>
                                  )}
@@ -333,7 +320,6 @@ export default function InventoryMasterPage() {
                               <div className="text-right">
                                 <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1">ยอดคงเหลือ</p>
                                 <p className={`text-xs font-bold ${p.current_display_qty <= (p.current_min_stock || 0) ? 'text-rose-500' : 'text-slate-600'}`}>
-                                  {/* 🚩 ใช้ค่า current_display_qty ที่คำนวณตามสาขา */}
                                   {p.current_display_qty?.toLocaleString()} {p.unit || 'ชิ้น'}
                                 </p>
                               </div>
@@ -366,13 +352,22 @@ export default function InventoryMasterPage() {
       )}
 
       {selectedProductId && (
-  <ProductDetailDrawer 
-    productId={selectedProductId} 
-    onClose={() => setSelectedProductId(null)} 
-    selectedBranchId={selectedBranch.id} 
-  />
-)}
+        <ProductDetailDrawer 
+          productId={selectedProductId} 
+          onClose={() => setSelectedProductId(null)} 
+          selectedBranchId={selectedBranch.id} 
+        />
+      )}
     </div>
+  )
+}
+
+// 🚩 export default ที่หุ้มด้วย Suspense เพื่อให้ Build ผ่าน
+export default function InventoryMasterPage() {
+  return (
+    <Suspense fallback={<InventorySkeleton />}>
+      <InventoryContent />
+    </Suspense>
   )
 }
 

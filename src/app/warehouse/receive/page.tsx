@@ -185,7 +185,7 @@ export default function GoodsReceivingPage() {
       />
 
       <div className="mb-14 border-b border-slate-100 pb-10 font-bold">
-        <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">รับเข้า <span className="text-indigo-600 font-black">สินค้าใหม่</span></h1>
+        <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">รับเข้า <span className="text-indigo-600 font-bold">สินค้าใหม่</span></h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em] mt-4 ml-1">ARWIP INTERNAL LOGISTICS</p>
       </div>
 
