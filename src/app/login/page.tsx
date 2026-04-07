@@ -89,34 +89,34 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-600 rounded-[30px] mb-8 shadow-2xl shadow-indigo-100">
                <Fingerprint className="text-white" size={40} />
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
-              Neural <span className="text-indigo-600">Access</span>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+              ล็อคอิน <span className="text-indigo-600">เข้าสู่ระบบ</span>
             </h1>
-            <p className="text-slate-400 mt-4 text-[10px] font-black uppercase tracking-[0.4em]">Establish Secure Link</p>
+            <p className="text-slate-400 mt-4 text-[10px] font-bold uppercase tracking-[0.4em]">Warehouse & Datacneter </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 ml-2 uppercase tracking-widest flex items-center gap-2">
-                <User size={12} /> Identity_ID
+              <label className="text-[10px] font-bold text-slate-400 ml-2 uppercase tracking-widest flex items-center gap-2">
+                <User size={12} /> ชื่อผู้ใช้พนักงาน
               </label>
               <input 
                 type="text" 
-                placeholder="Ex. EMP_001" 
-                className="w-full px-8 py-5 rounded-[25px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-900 font-bold focus:bg-white focus:border-indigo-500 italic"
+                placeholder="ชื่อผู้ใช้พนักงาน" 
+                className="w-full px-8 py-5 rounded-[25px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-700 font-medium focus:bg-white focus:border-indigo-500"
                 value={loginId} onChange={(e) => setLoginId(e.target.value)}
                 required 
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 ml-2 uppercase tracking-widest flex items-center gap-2">
-                <Lock size={12} /> Security_Key
+              <label className="text-[10px] font-bold text-slate-400 ml-2 uppercase tracking-widest flex items-center gap-2">
+                <Lock size={12} /> รหัสผู้ใช้พนักงาน
               </label>
               <input 
                 type="password" 
                 placeholder="••••••••" 
-                className="w-full px-8 py-5 rounded-[25px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-900 font-bold focus:bg-white focus:border-indigo-500"
+                className="w-full px-8 py-5 rounded-[25px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-700 font-bold focus:bg-white focus:border-indigo-500"
                 value={password} onChange={(e) => setPassword(e.target.value)}
                 required 
               />
@@ -125,10 +125,10 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-[28px] font-black text-[12px] mt-4 shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-[0.97] uppercase tracking-[0.3em] italic"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-[28px] font-bold text-[16px] mt-12 shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-[0.97] uppercase tracking-[0.1em]"
             >
-              {loading ? 'Verifying...' : (
-                <>Authorize Access <ArrowRight size={18} /></>
+              {loading ? 'กำลังตรวจสอบ...' : (
+                <>เข้าสู่ระบบ <ArrowRight size={18} /></>
               )}
             </button>
           </form>
@@ -136,7 +136,7 @@ export default function LoginPage() {
           <div className="mt-12 pt-8 border-t border-slate-50 text-center">
              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-100">
                 <ShieldCheck className="text-emerald-500" size={14} />
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Protocol v4.0 Active</span>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">ARWIP security system</span>
              </div>
           </div>
         </div>

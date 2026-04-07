@@ -28,9 +28,9 @@ export default function PortalPage() {
            <Zap className="text-white" size={40} fill="white" />
         </div>
         <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">
-           Arwip<span className="text-indigo-600"> Intelligence</span>
+           เลือกหวมดหมู่<span className="text-indigo-600"> ของระบบที่ต้องการ</span>
         </h1>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Neural Workspace Gateway</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Arwip Workspace Gateway</p>
       </div>
 
       {/* --- CARDS --- */}
@@ -39,8 +39,8 @@ export default function PortalPage() {
         {/* DATACENTER: โผล่มาเป็นลำดับที่ 1 */}
         <div className={`transition-all duration-1000 delay-[500ms] ${isReady ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
           <SelectionCard 
-             title="Datacenter"
-             desc="Financial Intelligence, Risk Analysis, and Collection Control Center."
+             title="ศูนย์ข้อมูลพนักงานและลูกค้า"
+             desc="ระบบข้อมูลลูกค้าและพนักงาน ควบคุมรายละเอียดทางการเงิน และการจัดเก็บค่างวด"
              icon={Database}
              bgIcon={Database}
              color="indigo"
@@ -51,8 +51,8 @@ export default function PortalPage() {
         {/* WAREHOUSE: โผล่มาเป็นลำดับที่ 2 (ช้ากว่านิดนึงเพื่อให้ดูมีจังหวะ) */}
         <div className={`transition-all duration-1000 delay-[700ms] ${isReady ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
           <SelectionCard 
-             title="Warehouse"
-             desc="Inventory Management, Stock Movement, and Asset Tracking System."
+             title="ศูนย์ข้อมูลคลังสินค้า"
+             desc="ระบบบริหารจัดการคลังสินค้า ควบคุมการเคลื่อนไหวสต็อก และติดตามสถานะสินทรัพย์"
              icon={Package}
              bgIcon={Package}
              color="emerald"
@@ -67,7 +67,7 @@ export default function PortalPage() {
         className={`mt-16 flex items-center gap-3 px-6 py-3 bg-white rounded-full border border-slate-100 shadow-sm text-slate-400 hover:text-indigo-600 hover:shadow-md transition-all duration-500 delay-1000 ${isReady ? 'opacity-100' : 'opacity-0'}`}
       >
         <Settings size={16} />
-        <span className="text-[10px] font-black uppercase tracking-widest">Global Settings</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest">Global Settings</span>
       </button>
 
     </div>
@@ -104,12 +104,6 @@ function SelectionCard({ title, desc, icon: Icon, bgIcon: BgIcon, color, onClick
          <BgIcon size={260} strokeWidth={1} className={theme.bgIcon} />
       </div>
 
-      {/* NEURAL TAG */}
-      <div className="absolute top-12 right-12 flex flex-col items-end opacity-20 group-hover:opacity-60 transition-all">
-        <span className="text-[7px] font-black uppercase tracking-[0.5em] text-slate-400">Node_Active</span>
-        <div className={`h-[1px] w-8 ${theme.primary} mt-1 scale-x-0 group-hover:scale-x-100 transition-transform origin-right duration-500`}></div>
-      </div>
-
       <div className="relative z-10 flex flex-col h-full">
         {/* MAIN ICON: ขยายตัวนุ่มนวล */}
         <div className={`w-16 h-16 ${theme.primary} text-white rounded-[24px] flex items-center justify-center mb-10 shadow-lg group-hover:scale-110 transition-all duration-500 group-hover:shadow-indigo-200`}>
@@ -117,12 +111,12 @@ function SelectionCard({ title, desc, icon: Icon, bgIcon: BgIcon, color, onClick
         </div>
         
         <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4 italic leading-none">{title}</h2>
-        <p className="text-slate-400 font-bold text-sm leading-relaxed mb-12 max-w-[240px] italic">
+        <p className="text-slate-400 font-medium text-sm leading-relaxed mb-12 max-w-[240px] italic">
           {desc}
         </p>
         
-        <div className={`mt-auto flex items-center gap-3 font-black text-[10px] uppercase tracking-[0.3em] ${theme.text}`}>
-          Establish Connection <ArrowRight size={16} className="group-hover:translate-x-3 transition-transform duration-500" />
+        <div className={`mt-auto flex items-center gap-3 font-bold text-[11px] uppercase tracking-[0.1em] ${theme.text}`}>
+          เชื่อมต่อเข้าสู่โมดูลของระบบ <ArrowRight size={16} className="group-hover:translate-x-3 transition-transform duration-500" />
         </div>
       </div>
     </div>
