@@ -12,7 +12,6 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
   const [selectedBill, setSelectedBill] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 🚩 ฟังก์ชันเปิด Modal
   const handleOpenModal = (payment: any, contract: any) => {
     const checkStatus = () => {
       if (payment.status === 'paid' || payment.status === 'completed' || !!payment.paid_at) {
@@ -33,7 +32,6 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
     setIsModalOpen(true);
   };
 
-  // --- 🟢 หน้าที่ 2: รายการบิลย่อย (เมื่อคลิกเลือกสัญญาแล้ว) ---
   if (activeContractId) {
     const selectedContract = contracts.find(c => c.id === activeContractId);
     if (!selectedContract) return null;
@@ -51,7 +49,7 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
         <div className="py-6 px-2 mb-4">
           <button 
             onClick={() => setActiveContractId(null)}
-            className="flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-black text-[10px] uppercase transition-all mb-8"
+            className="flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold text-[10px] uppercase transition-all mb-8"
           >
             <ArrowLeft size={16} /> กลับหน้าสรุปสัญญา
           </button>
@@ -64,24 +62,24 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                <div className="w-[2px] h-12 bg-slate-100 hidden md:block"></div>
                <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Product Details</span>
+                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Product Details</span>
                     <span className="text-[10px] font-bold text-slate-300">|</span>
                     <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1"><Hash size={12}/> {selectedContract.id.slice(0,8).toUpperCase()}</span>
                   </div>
-                  <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-none">
+                  <h2 className="text-3xl font-bold text-slate-800 uppercase tracking-tighter leading-none">
                       {sale.product_name || 'ไม่ระบุชื่อสินค้า'}
                   </h2>
                </div>
             </div>
 
             <div className="text-right">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ยอดชำระสุทธิ (จ่ายแล้ว / ทั้งหมด)</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">ยอดชำระสุทธิ (จ่ายแล้ว / ทั้งหมด)</p>
                 <div className="flex items-baseline gap-2 justify-end">
-                  <span className="text-3xl font-black text-slate-700 tracking-tighter">
+                  <span className="text-3xl font-bold text-slate-700 tracking-tighter">
                     ฿{totalPaidAmount.toLocaleString()}
                   </span>
-                  <span className="text-xl font-black text-slate-200">/</span>
-                  <span className="text-xl font-black text-slate-400 tracking-tighter">
+                  <span className="text-xl font-bold text-slate-200">/</span>
+                  <span className="text-xl font-bold text-slate-400 tracking-tighter">
                     ฿{totalContractAmount.toLocaleString()}
                   </span>
                 </div>
@@ -110,23 +108,23 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                 className={`flex items-center justify-between p-7 rounded-[40px] border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${statusStyles}`}
               >
                 <div className="flex items-center gap-6">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${
                     isPaid ? 'bg-emerald-500 text-white' : isOverdue ? 'bg-red-500 text-white animate-pulse' : 'bg-amber-400 text-white'
                   }`}>
                     {item.installment_number}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <p className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-500' : isPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest ${isOverdue ? 'text-red-500' : isPaid ? 'text-emerald-600' : 'text-amber-600'}`}>
                           {isOverdue ? 'เกินกำหนดชำระ' : isPaid ? 'ชำระเรียบร้อย' : 'กำหนดชำระ'}: {new Date(item.due_date).toLocaleDateString('th-TH')}
                       </p>
                       {isLate && (
-                          <span className="px-3 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black rounded-full border border-rose-200 uppercase tracking-tighter">
+                          <span className="px-3 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-bold rounded-full border border-rose-200 uppercase tracking-tighter">
                             ชำระล่าช้า
                           </span>
                         )}
                       </div>
-                    <p className={`text-xl font-black tracking-tighter ${priceColor}`}>
+                    <p className={`text-xl font-bold tracking-tighter ${priceColor}`}>
                       ฿{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </p>
                   </div>
@@ -136,7 +134,7 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                   <div className="text-right hidden sm:block">
                     {isPaid ? (
                       <>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">
                           ชำระเรียบร้อย
                         </p>
                         {item.paid_at && (
@@ -146,7 +144,7 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                         )}
                       </>
                     ) : (
-                      <p className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-500' : 'text-amber-600'}`}>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest ${isOverdue ? 'text-red-500' : 'text-amber-600'}`}>
                         {isOverdue ? 'เกินกำหนด' : 'รอชำระ'}
                       </p>
                     )}
@@ -174,17 +172,16 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
     );
   }
 
-  // --- 🔵 หน้าที่ 1: หน้าสรุป (Card View) ---
   return (
     <div className="space-y-8 animate-in fade-in duration-500">   
       <div className="flex justify-between items-end px-2 mb-6">
         <div className="space-y-1"></div>
         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
-            <span className="text-[12px] font-black text-indigo-600 uppercase tracking-widest">
+            <span className="text-[12px] font-bold text-indigo-600 uppercase tracking-widest">
             {contracts.filter((c: any) => c.contract_status !== 'completed').length} จำนวนดำเนิดการ
             </span>
-            <span className="text-[12px] font-black text-slate-500">/</span>
-            <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest">
+            <span className="text-[12px] font-bold text-slate-500">/</span>
+            <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest">
             {contracts.length} จำนวนทั้งหมด
             </span>
         </div>
@@ -249,10 +246,10 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                     <ShoppingBag size={24} />
                   </div>
                   <div className="space-y-1">
-                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${statusTheme.text}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${statusTheme.text}`}>
                         {isCompleted ? 'Finished Contract' : 'Installment Plan'}
                     </p>
-                    <h2 className={`text-2xl font-black uppercase tracking-tighter transition-colors ${statusTheme.title}`}>
+                    <h2 className={`text-2xl font-bold uppercase tracking-tighter transition-colors ${statusTheme.title}`}>
                       {sale.product_name || 'ไม่ระบุชื่อสินค้า'}
                     </h2>
                     <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 mt-1">
@@ -261,31 +258,31 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                     </div>
                   </div>
                 </div>
-                <div className={`px-5 py-2 rounded-full font-black text-[10px] uppercase tracking-widest border-2 transition-all ${statusTheme.badge}`}>
+                <div className={`px-5 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest border-2 transition-all ${statusTheme.badge}`}>
                   {statusTheme.label}
                 </div>
               </div>
 
               <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
                 <div className="space-y-2">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
                       <Banknote size={14} className={statusTheme.text}/> ยอดชำระรวม (จ่ายแล้ว / ทั้งหมด)
                    </p>
                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className={`text-4xl font-black tracking-tighter ${statusTheme.amount}`}>
+                      <span className={`text-4xl font-bold tracking-tighter ${statusTheme.amount}`}>
                         ฿{totalPaidAmount.toLocaleString()}
                       </span>
-                      <span className="text-2xl font-black text-slate-200">/</span>
-                      <span className="text-2xl font-black text-slate-400 tracking-tighter">
+                      <span className="text-2xl font-bold text-slate-200">/</span>
+                      <span className="text-2xl font-bold text-slate-400 tracking-tighter">
                         ฿{totalContractAmount.toLocaleString()}
                       </span>
                    </div>
                 </div>
                 <div className="space-y-2 text-right">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex justify-end items-center gap-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex justify-end items-center gap-2">
                       <Layers size={14} className={statusTheme.text}/> ความคืบหน้า (งวด)
                   </p>
-                  <p className="text-4xl font-black tracking-tighter">
+                  <p className="text-4xl font-bold tracking-tighter">
                       <span className={`${isCompleted ? 'text-slate-400' : overdueCount > 0 ? 'text-red-500 animate-pulse' : 'text-indigo-600'}`}>
                         {paidCount}
                       </span>
@@ -302,7 +299,7 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
                   <div className="flex items-center gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
                       <span className="flex items-center gap-2"><Clock size={14}/> คลิกเพื่อตรวจสอบบิลรายงวด</span>
                   </div>
-                  <div className={`flex items-center gap-2 font-black text-[11px] uppercase tracking-widest ${statusTheme.text}`}>
+                  <div className={`flex items-center gap-2 font-bold text-[11px] uppercase tracking-widest ${statusTheme.text}`}>
                       ดูรายละเอียดบิล <ArrowRight size={18} />
                   </div>
               </div>
@@ -313,7 +310,7 @@ export default function InstallmentDetails({ contracts, customerName }: { contra
       ) : (
         <div className="p-20 text-center bg-slate-50 rounded-[50px] border-2 border-dashed border-slate-200">
            <Receipt size={48} className="mx-auto text-slate-200 mb-4" />
-           <p className="text-slate-400 font-black uppercase tracking-[0.2em]">ไม่มีประวัติการเช่าซื้อ</p>
+           <p className="text-slate-400 font-bold uppercase tracking-[0.2em]">ไม่มีประวัติการเช่าซื้อ</p>
         </div>
       )}
     </div>

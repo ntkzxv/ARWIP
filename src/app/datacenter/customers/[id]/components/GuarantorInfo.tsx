@@ -30,7 +30,7 @@ export default function GuarantorInfo({ contracts }: any) {
         monthly_income: g.monthly_income,
         relationship: g.relationship,
         product_id: con.sales_transactions?.product_id || '-',
-        product_name: con.sales_transactions?.product_name || 'ไม่ระบุชื่อสินค้า' // 🚩 เพิ่มชื่อสินค้า
+        product_name: con.sales_transactions?.product_name || 'ไม่ระบุชื่อสินค้า'
       };
     });
 
@@ -56,7 +56,7 @@ export default function GuarantorInfo({ contracts }: any) {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
         <div className="flex justify-end items-center px-2 mb-6">
                 <div className="flex items-center bg-slate-50 px-5 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
-                <span className="text-[12px] font-black text-indigo-600 uppercase tracking-widest">
+                <span className="text-[12px] font-bold text-indigo-600 uppercase tracking-widest">
                     {guarantors.length} ทั้งหมด
                 </span>
                 </div>
@@ -79,16 +79,16 @@ export default function GuarantorInfo({ contracts }: any) {
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Contract: {g.contract_id.slice(0,8).toUpperCase()}</span>
+                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Contract: {g.contract_id.slice(0,8).toUpperCase()}</span>
                   </div>
-                  <p className="text-2xl font-black text-slate-900 tracking-tighter">{g.full_name}</p>
+                  <p className="text-2xl font-bold text-slate-900 tracking-tighter">{g.full_name}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between lg:justify-end gap-10 lg:flex-1">
                 <div className="lg:text-right border-l lg:border-l-0 lg:border-r border-slate-100 pl-4 lg:pl-0 lg:pr-10">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">สินค้าที่ค้ำประกัน</p>
-                  <p className="text-base font-black text-slate-900 flex items-center gap-2 lg:justify-end">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 leading-none">สินค้าที่ค้ำประกัน</p>
+                  <p className="text-base font-bold text-slate-900 flex items-center gap-2 lg:justify-end">
                     <Box size={14} className="text-indigo-500"/> {g.product_name}
                   </p>
                   <p className="text-[10px] font-bold text-indigo-400 mt-1 uppercase">ID: {g.product_id}</p>
@@ -106,14 +106,14 @@ export default function GuarantorInfo({ contracts }: any) {
                   
                   {/* ข้อมูลส่วนตัว - 🚩 เปลี่ยน Heart เป็น User */}
                   <div className="space-y-6">
-                    <h3 className="flex items-center gap-2 text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4 border-b border-indigo-50 pb-4">
+                    <h3 className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 uppercase tracking-[0.2em] mb-4 border-b border-indigo-50 pb-4">
                       <User size={16}/> ข้อมูลส่วนตัวผู้ค้ำ
                     </h3>
                     <div className="space-y-4">
                       <DataRow label="ชื่อ-นามสกุล" value={g.full_name}/>
                       <DataRow label="ความสัมพันธ์" value={g.relationship}/>
                       <div className="flex justify-between items-center border-b border-slate-100/50 pb-2">
-                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-tighter">เลขบัตรประชาชน</span>
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">เลขบัตรประชาชน</span>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-slate-900 tracking-tight">{formatId(g.id_card, showId[g.id])}</span>
                           <button onClick={(e) => {e.stopPropagation(); setShowId(prev => ({...prev, [g.id]: !prev[g.id]}));}} className="text-slate-300 hover:text-indigo-600 transition-colors">
@@ -131,7 +131,7 @@ export default function GuarantorInfo({ contracts }: any) {
 
                   {/* ข้อมูลอาชีพและรายได้ */}
                   <div className="space-y-6">
-                    <h3 className="flex items-center gap-2 text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4 border-b border-indigo-50 pb-4">
+                    <h3 className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 uppercase tracking-[0.2em] mb-4 border-b border-indigo-50 pb-4">
                       <Briefcase size={16}/> ข้อมูลอาชีพ & รายได้
                     </h3>
                     <div className="space-y-4">
@@ -142,7 +142,7 @@ export default function GuarantorInfo({ contracts }: any) {
                     </div>
                     
                     <div className="mt-6 space-y-3">
-                      <p className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่สถานที่ทำงาน</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่สถานที่ทำงาน</p>
                       <div className="p-6 bg-white rounded-3xl border border-slate-100 ">
                         <p className="text-sm font-bold text-slate-900 leading-relaxed">
                           {g.work_place_address || '-'}
@@ -154,18 +154,18 @@ export default function GuarantorInfo({ contracts }: any) {
 
                 {/* ข้อมูลที่อยู่ */}
                 <div className="pt-8 border-t border-slate-100">
-                  <h3 className="flex items-center gap-2 text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-8">
+                  <h3 className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 uppercase tracking-[0.2em] mb-8">
                     <MapPin size={16}/> ข้อมูลที่อยู่ผู้ค้ำประกัน
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่ปัจจุบัน</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่ปัจจุบัน</p>
                       <div className="p-7 bg-white rounded-[35px] border border-slate-100 min-h-[100px]">
                         <p className="text-sm font-bold text-slate-900 leading-relaxed">{g.current_address}</p>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่ตามภูมิลำเนา</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่ตามภูมิลำเนา</p>
                       <div className="p-7 bg-white rounded-[35px] border border-slate-100 min-h-[100px]">
                         <p className="text-sm font-bold text-slate-900 leading-relaxed">{g.permanent_address}</p>
                       </div>

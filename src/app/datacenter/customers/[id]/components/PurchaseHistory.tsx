@@ -34,7 +34,6 @@ export default function PurchaseHistory({ contracts, sales }: any) {
     return `${day}/${month}/${year}`;
   };
 
-  // --- 🔴 หน้ารายละเอียด (Detail View) แก้ไขเฉพาะส่วนนี้ ---
   if (selectedItem) {
     const isCash = selectedItem.type === 'cash';
     const sale = isCash ? selectedItem : (selectedItem.sales_transactions || {});
@@ -45,7 +44,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
       <div className="space-y-6 animate-in slide-in-from-right duration-500 pb-10">
         <button 
           onClick={() => setSelectedItem(null)} 
-          className="group flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-black text-[10px] uppercase transition-all mb-4"
+          className="group flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold text-[10px] uppercase transition-all mb-4"
         >
           <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform"/> กลับสู่รายการทั้งหมด
         </button>
@@ -72,19 +71,19 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                 {/* Info Area (ตัวหนังสือตรง สระไม่เบียด) */}
                 <div className="flex flex-col gap-2.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] border ${
+                    <span className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-[0.15em] border ${
                       isCash 
                         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
                         : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
                     }`}>
                       {isCash ? 'Cash Payment' : 'Installment Active'}
                     </span>
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md border border-white/5">
                       REF: {selectedItem.id.slice(0, 8)}
                     </span>
                   </div>
                   
-                  <h2 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tight leading-snug">
+                  <h2 className="text-2xl lg:text-3xl font-bold text-white uppercase tracking-tight leading-snug">
                     {sale.product_name}
                   </h2>
                 </div>
@@ -92,10 +91,10 @@ export default function PurchaseHistory({ contracts, sales }: any) {
 
               {/* Price Section (ฝั่งขวา) */}
               <div className="w-full lg:w-auto flex flex-col items-start lg:items-end border-t lg:border-t-0 border-white/5 pt-6 lg:pt-0">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">ยอดรวมที่ชำระทั้งสิ้น</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">ยอดรวมที่ชำระทั้งสิ้น</p>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-lg font-black text-indigo-500">฿</span>
-                  <span className="text-3xl lg:text-4xl font-black text-white tracking-tighter tabular-nums">
+                  <span className="text-lg font-bold text-indigo-500">฿</span>
+                  <span className="text-3xl lg:text-4xl font-bold text-white tracking-tighter tabular-nums">
                     {grandTotal.toLocaleString()}
                   </span>
                 </div>
@@ -110,7 +109,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
           {/* ข้อมูลสินค้า */}
           <div className="bg-white rounded-[35px] border border-slate-100 p-8 shadow-sm flex flex-col justify-between min-h-[400px]">
             <div>
-              <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-5 mb-6">
+              <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-5 mb-6">
                 <Tag size={14} className="text-indigo-600"/> Product Specification
               </h3>
               <div className="space-y-8">
@@ -124,13 +123,13 @@ export default function PurchaseHistory({ contracts, sales }: any) {
               </div>
             </div>
             <div className="mt-8 pt-6 border-t border-slate-50 opacity-30">
-              <p className="text-[10px] font-black text-slate-900 font-mono uppercase tracking-tighter">UID: {selectedItem.id}</p>
+              <p className="text-[10px] font-bold text-slate-900 font-mono uppercase tracking-tighter">UID: {selectedItem.id}</p>
             </div>
           </div>
 
           {/* 🚩 Financial Summary (ปรับปรุงขนาดฟอนต์ให้ใหญ่ขึ้น) */}
           <div className="bg-white rounded-[35px] border border-slate-100 p-8 shadow-sm flex flex-col">
-            <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-5 mb-6">
+            <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-5 mb-6">
               <Banknote size={14} className="text-indigo-600"/> Financial Summary
             </h3>
             <div className="space-y-6 flex-1 text-sm font-bold">
@@ -152,8 +151,8 @@ export default function PurchaseHistory({ contracts, sales }: any) {
               )}
             </div>
             <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-50 text-right">
-              <p className="text-[10px] font-black text-indigo-600 uppercase mb-0.5 tracking-widest">ยอดรวมสุทธิ</p>
-              <p className="text-4xl font-black text-slate-950 tracking-tighter">฿{grandTotal.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-indigo-600 uppercase mb-0.5 tracking-widest">ยอดรวมสุทธิ</p>
+              <p className="text-4xl font-bold text-slate-950 tracking-tighter">฿{grandTotal.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -165,8 +164,8 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                   <Store size={20}/>
                </div>
                <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Branch Location</p>
-                  <p className="text-lg font-black text-slate-950 truncate uppercase">{branchName}</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Branch Location</p>
+                  <p className="text-lg font-bold text-slate-950 truncate uppercase">{branchName}</p>
                </div>
             </div>
             <div className="flex items-center gap-4 p-6 bg-indigo-50/30 rounded-[30px] border border-indigo-100 shadow-sm">
@@ -174,8 +173,8 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                   <User size={20}/>
                </div>
                <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Staff In-Charge</p>
-                  <p className="text-lg font-black text-slate-900 truncate uppercase">{sale.staff_name || 'Admin'}</p>
+                  <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Staff In-Charge</p>
+                  <p className="text-lg font-bold text-slate-900 truncate uppercase">{sale.staff_name || 'Admin'}</p>
                </div>
             </div>
         </div>
@@ -183,22 +182,21 @@ export default function PurchaseHistory({ contracts, sales }: any) {
     );
   }
 
-  // --- 🔵 หน้าหลัก (Card View) --- (คงไว้เหมือนเดิม ไม่มีการแก้ไข)
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
       <div className="flex justify-between items-end px-2 mb-4">
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-10 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200"></div>
           <div>
-            <p className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">รายการประวัติการซื้อ</p>
+            <p className="text-2xl font-bold text-slate-900 tracking-tighter uppercase leading-none">รายการประวัติการซื้อ</p>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
-            <span className="text-[12px] font-black text-indigo-600 uppercase tracking-widest">
+            <span className="text-[12px] font-bold text-indigo-600 uppercase tracking-widest">
               {contracts.filter((c: any) => c.contract_status !== 'completed').length} ดำเนินการ
             </span>
-            <span className="text-[12px] font-black text-slate-300">/</span>
-            <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest">
+            <span className="text-[12px] font-bold text-slate-300">/</span>
+            <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest">
               {allHistory.length} ทั้งหมด
             </span>
         </div>
@@ -224,19 +222,19 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isCompleted ? 'bg-slate-200 text-slate-500' : 'bg-indigo-50 text-indigo-600'}`}>
+                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${isCompleted ? 'bg-slate-200 text-slate-500' : 'bg-indigo-50 text-indigo-600'}`}>
                         {isCash ? 'ซื้อเงินสด' : 'ผ่อนชำระ'}
                       </span>
-                      <span className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase flex items-center gap-1">
                         <Calendar size={10} /> {formatDateSimple(sale.created_at)}
                       </span>
                     </div>
-                    <h4 className="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none">{sale.product_name}</h4>
+                    <h4 className="text-2xl font-bold text-slate-900 uppercase tracking-tighter leading-none">{sale.product_name}</h4>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">ยอดรวมสัญญา</p>
-                  <p className={`text-3xl font-black tracking-tighter ${isCompleted ? 'text-slate-600' : 'text-indigo-600'}`}>฿{grandTotal.toLocaleString()}</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">ยอดรวมสัญญา</p>
+                  <p className={`text-3xl font-bold tracking-tighter ${isCompleted ? 'text-slate-600' : 'text-indigo-600'}`}>฿{grandTotal.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -252,8 +250,8 @@ function DetailItem({ label, value, icon, fullWidth = false, size = "text-base" 
     <div className={`flex items-start gap-3 min-w-0 ${fullWidth ? 'md:col-span-2' : ''}`}>
         <div className="text-indigo-600 mt-1 shrink-0 bg-indigo-50 p-2 rounded-lg">{icon}</div>
         <div className="min-w-0">
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-          <p className={`font-black text-slate-900 truncate uppercase ${fullWidth ? (size === "text-base" ? "text-2xl" : size) : 'text-base'}`}>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+          <p className={`font-bold text-slate-900 truncate uppercase ${fullWidth ? (size === "text-base" ? "text-2xl" : size) : 'text-base'}`}>
             {value}
           </p>
         </div>

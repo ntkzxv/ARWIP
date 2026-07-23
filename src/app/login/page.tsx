@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
 import { useRouter } from 'next/navigation'
-import { Fingerprint, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Fingerprint, Lock, User, ArrowRight, ShieldCheck, Zap } from 'lucide-react'
 
 export default function LoginPage() {
   const [loginId, setLoginId] = useState('')
@@ -32,15 +32,14 @@ export default function LoginPage() {
     checkAuth()
   }, [router])
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // 🛠️ Helper Function สำหรับทำ Auth Process ให้รองรับทั้งแบบปกติและ Bypass
+  const executeLogin = async (idToUse: string, passToUse: string) => {
     setLoading(true)
     try {
       const { data: employee, error } = await supabase
         .from('employees')
         .select('*')
-        
-        .eq('login_id', loginId)
+        .eq('login_id', idToUse)
         .single()
 
       if (error || !employee) {
@@ -49,7 +48,7 @@ export default function LoginPage() {
         return
       }
 
-      if (employee.temp_password !== password) {
+      if (employee.temp_password !== passToUse) {
         alert('Security Error: Invalid Key')
         setLoading(false)
         return
@@ -62,6 +61,28 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await executeLogin(loginId, password)
+  }
+
+  // ==========================================
+  // 🚨 [BYPASS LOGIC IN LOGIN PAGE]
+  // ==========================================
+  // ฟังก์ชันใส่ admin / 0 อัตโนมัติและส่ง Login เข้าสู่ระบบทันที
+  const handleAutoBypass = async () => {
+    const targetLoginId = 'admin'
+    const targetPassword = '0'
+
+    // 1. อัปเดตค่าลง Input State แสดงให้ผู้ใช้เห็น
+    setLoginId(targetLoginId)
+    setPassword(targetPassword)
+
+    // 2. ยิง Login ทันทีด้วยค่า Bypass
+    await executeLogin(targetLoginId, targetPassword)
+  }
+  // ==========================================
 
   // 🚩 ส่วนที่กั้นหน้าจอ (ต้องแน่ใจว่า bg ตรงกับ Splash Screen)
   if (isChecking) {
@@ -92,7 +113,7 @@ export default function LoginPage() {
             <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
               ล็อคอิน <span className="text-indigo-600">เข้าสู่ระบบ</span>
             </h1>
-            <p className="text-slate-400 mt-4 text-[10px] font-bold uppercase tracking-[0.4em]">Warehouse & Datacneter </p>
+            <p className="text-slate-400 mt-4 text-[10px] font-bold uppercase tracking-[0.4em]">Warehouse & Datacenter </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -104,7 +125,8 @@ export default function LoginPage() {
                 type="text" 
                 placeholder="ชื่อผู้ใช้พนักงาน" 
                 className="w-full px-8 py-5 rounded-[25px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-700 font-medium focus:bg-white focus:border-indigo-500"
-                value={loginId} onChange={(e) => setLoginId(e.target.value)}
+                value={loginId} 
+                onChange={(e) => setLoginId(e.target.value)}
                 required 
               />
             </div>
@@ -117,7 +139,8 @@ export default function LoginPage() {
                 type="password" 
                 placeholder="••••••••" 
                 className="w-full px-8 py-5 rounded-[25px] bg-slate-50 border border-slate-100 outline-none transition-all text-slate-700 font-bold focus:bg-white focus:border-indigo-500"
-                value={password} onChange={(e) => setPassword(e.target.value)}
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
                 required 
               />
             </div>
@@ -125,12 +148,26 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-[28px] font-bold text-[16px] mt-12 shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-[0.97] uppercase tracking-[0.1em]"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-[28px] font-bold text-[16px] mt-8 shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-[0.97] uppercase tracking-[0.1em]"
             >
               {loading ? 'กำลังตรวจสอบ...' : (
                 <>เข้าสู่ระบบ <ArrowRight size={18} /></>
               )}
             </button>
+
+            {/* ========================================== */}
+            {/* ⚡ [BYPASS BUTTON UI]                      */}
+            {/* ปุ่มกด Bypass Auto-Fill + Login อัตโนมัติ (admin / 0) */}
+            {/* ========================================== */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleAutoBypass}
+              className="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.97] text-white py-4 rounded-[24px] font-bold text-[12px] flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-100 uppercase tracking-[0.1em]"
+            >
+              <Zap size={16} /> Bypass Login (For test)
+            </button>
+            {/* ========================================== */}
           </form>
 
           <div className="mt-12 pt-8 border-t border-slate-50 text-center">

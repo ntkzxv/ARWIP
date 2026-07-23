@@ -4,7 +4,6 @@ import { supabase } from '../../../../utils/supabase'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Loader2, Edit2, Save } from 'lucide-react'
 
-// Import Components
 import Sidebar from './components/Sidebar'
 import PersonalInfo from './components/PersonalInfo'
 import GuarantorInfo from './components/GuarantorInfo'
@@ -14,14 +13,12 @@ import CollectionHistoryTab from './components/CollectionHistoryTab'
 
 import Swal from 'sweetalert2'
 
-// 🚩 แยก Content ออกมาเพื่อใช้ Suspense ครอบ (Next.js บังคับเมื่อใช้ useSearchParams)
 function CustomerDetailContent() {
   const params = useParams()
   const id = params?.id
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  // 🚩 ดึงค่าจาก URL
   const initialTab = searchParams.get('tab') 
   const contractIdFromUrl = searchParams.get('contractId')
 
@@ -53,7 +50,6 @@ function CustomerDetailContent() {
     }
   }, [activeTab, contractIdFromUrl])
 
-  // 🚩 แก้ไขชื่อ Tab ให้ตรงตามที่ส่งมาจาก Notification (ถ้าส่ง tab=purchase มาให้เปลี่ยนเป็น history)
   useEffect(() => {
     const tab = searchParams.get('tab')
     if (tab === 'purchase') {
@@ -106,7 +102,7 @@ function CustomerDetailContent() {
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#f4f7fe] gap-4">
       <Loader2 className="animate-spin text-slate-400" size={48} />
-      <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Loading Customer Profile...</p>
+      <p className="text-xs font-bold uppercase text-slate-400 tracking-widest">Loading Customer Profile...</p>
     </div>
   )
 
@@ -118,8 +114,8 @@ function CustomerDetailContent() {
             <ArrowLeft size={24} />
           </button>
           <div className="space-y-1">
-            <h1 className="text-4xl font-black text-slate-800 tracking-tighter uppercase">{customer?.full_name}</h1>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <h1 className="text-4xl font-bold text-slate-800 tracking-tighter uppercase">{customer?.full_name}</h1>
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full" /> 
             Customer Detail ID: {id?.toString().slice(0,8)}
           </div>
@@ -133,12 +129,11 @@ function CustomerDetailContent() {
 <div className="flex-1 bg-white rounded-[45px] shadow-sm border border-slate-100 p-8 md:p-12 transition-all">
   {activeTab === 'personal' && <PersonalInfo customer={customer} isEditing={isEditing} editForm={editForm} setEditForm={setEditForm} />}
   
-  {/* 🚩 แก้ไข: ส่ง contractId จาก URL ลงไปใน Component */}
   {activeTab === 'history' && (
     <PurchaseHistory 
       contracts={contracts} 
       sales={sales} 
-      autoExpandId={searchParams.get('contractId')} // ส่ง ID ไปให้ลูก
+      autoExpandId={searchParams.get('contractId')}
     />
   )}
           {activeTab === 'guarantor' && <GuarantorInfo contracts={contracts} />}
@@ -159,7 +154,6 @@ function CustomerDetailContent() {
   )
 }
 
-// 🚩 Main Component พร้อม Suspense Boundary
 export default function CustomerDetailPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>

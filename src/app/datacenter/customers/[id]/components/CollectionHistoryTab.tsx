@@ -29,15 +29,15 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
             <ClipboardList size={28} />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-none mb-2">Collection History</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <h2 className="text-3xl font-bold text-slate-800 uppercase tracking-tighter leading-none mb-2">Collection History</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Clock size={12} /> ประวัติการติดตามหนี้และสรุปการเจรจา
             </p>
           </div>
         </div>
         <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center md:text-left">จำนวนการติดต่อ</p>
-          <p className="text-xl font-black text-slate-900 text-center md:text-left">{logs.length} ครั้ง</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 text-center md:text-left">จำนวนการติดต่อ</p>
+          <p className="text-xl font-bold text-slate-900 text-center md:text-left">{logs.length} ครั้ง</p>
         </div>
       </div>
 
@@ -54,14 +54,14 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
               <div className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl hover:border-indigo-100 transition-all duration-300">
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                       {new Date(log.created_at).toLocaleDateString('th-TH', { 
                         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
                       })}
                     </p>
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${getMethodColor(log.contact_method)}`} />
-                      <span className="text-xs font-black text-slate-800 uppercase tracking-widest">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-widest">
                         {log.contact_method === 'phone' ? 'โทรศัพท์' : log.contact_method === 'line' ? 'LINE' : 'ลงพื้นที่'}
                       </span>
                     </div>
@@ -71,8 +71,8 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
                     <div className="bg-amber-50 border border-amber-100 px-4 py-2 rounded-xl flex items-center gap-3">
                        <Calendar size={14} className="text-amber-600" />
                        <div>
-                         <p className="text-[8px] font-black text-amber-500 uppercase leading-none mb-1 text-right">วันนัดชำระ</p>
-                         <p className="text-sm font-black text-amber-700 leading-none">
+                         <p className="text-[8px] font-bold text-amber-500 uppercase leading-none mb-1 text-right">วันนัดชำระ</p>
+                         <p className="text-sm font-bold text-amber-700 leading-none">
                            {new Date(log.promise_date).toLocaleDateString('th-TH')}
                          </p>
                        </div>
@@ -90,7 +90,7 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
       ) : (
         <div className="p-24 text-center bg-slate-50 rounded-[50px] border-2 border-dashed border-slate-200">
            <MessageSquare size={48} className="mx-auto text-slate-200 mb-6" />
-           <p className="text-slate-400 font-black uppercase tracking-[0.2em]">ยังไม่มีประวัติการติดต่อลูกค้าในขณะนี้</p>
+           <p className="text-slate-400 font-bold uppercase tracking-[0.2em]">ยังไม่มีประวัติการติดต่อลูกค้าในขณะนี้</p>
         </div>
       )}
     </div>
