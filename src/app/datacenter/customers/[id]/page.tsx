@@ -61,9 +61,17 @@ function CustomerDetailContent() {
 
   const fetchData = async () => {
     if (!id || id === 'undefined') return;
+    setLoading(true);
     try {
-      let { data: custData } = await supabase.from('customers').select(`*, branches(*)`).eq('id', id).maybeSingle();
+      let { data: custData, error: custError } = await supabase
+        .from('customers')
+        .select(`*, branches(*)`)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (custError) console.error('Customer Fetch Error:', custError);
       if (!custData) return;
+
       setCustomer(custData);
       setEditForm(custData);
 
@@ -71,6 +79,9 @@ function CustomerDetailContent() {
         supabase.from('installment_contracts').select('*').eq('customer_id', id),
         supabase.from('sales_transactions').select('*').eq('customer_id', id).eq('transaction_type', 'cash')
       ]);
+
+      if (contractRes.error) console.error('Contract Fetch Error:', contractRes.error);
+      if (cashSalesRes.error) console.error('Cash Sales Fetch Error:', cashSalesRes.error);
 
       if (contractRes.data && contractRes.data.length > 0) {
         const cIds = contractRes.data.map(c => c.id);
@@ -83,18 +94,31 @@ function CustomerDetailContent() {
           supabase.from('collection_logs').select('*').in('contract_id', cIds).order('created_at', { ascending: false })
         ]);
 
+        if (paymentsRes.error) console.error('Payments Fetch Error:', paymentsRes.error);
+        if (guarantorsRes.error) console.error('Guarantors Fetch Error:', guarantorsRes.error);
+        if (stRes.error) console.error('Sales Transactions Fetch Error:', stRes.error);
+        if (logsRes.error) console.error('Collection Logs Fetch Error:', logsRes.error);
+
         const enriched = contractRes.data.map(con => ({
           ...con,
           sales_transactions: stRes.data?.find(s => s.id === con.transaction_id),
-          installment_payments: paymentsRes.data?.filter(p => p.contract_id === con.id),
-          guarantors: guarantorsRes.data?.filter(g => g.contract_id === con.id)
+          installment_payments: paymentsRes.data?.filter(p => p.contract_id === con.id) || [],
+          guarantors: guarantorsRes.data?.filter(g => g.contract_id === con.id) || []
         }));
 
         setContracts(enriched);
         setCollectionLogs(logsRes.data || []); 
+      } else {
+        setContracts([]);
+        setCollectionLogs([]);
       }
+
       setSales(cashSalesRes.data || []);
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) { 
+      console.error('Fetch Data Exception:', error); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => { fetchData() }, [id])
@@ -126,16 +150,16 @@ function CustomerDetailContent() {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} customerScore={customer?.credit_score || 0} />
 
-<div className="flex-1 bg-white rounded-[45px] shadow-sm border border-slate-100 p-8 md:p-12 transition-all">
-  {activeTab === 'personal' && <PersonalInfo customer={customer} isEditing={isEditing} editForm={editForm} setEditForm={setEditForm} />}
-  
-  {activeTab === 'history' && (
-    <PurchaseHistory 
-      contracts={contracts} 
-      sales={sales} 
-      autoExpandId={searchParams.get('contractId')}
-    />
-  )}
+        <div className="flex-1 bg-white rounded-[45px] shadow-sm border border-slate-100 p-8 md:p-12 transition-all">
+          {activeTab === 'personal' && <PersonalInfo customer={customer} isEditing={isEditing} editForm={editForm} setEditForm={setEditForm} />}
+          
+          {activeTab === 'history' && (
+            <PurchaseHistory 
+              contracts={contracts} 
+              sales={sales} 
+              autoExpandId={searchParams.get('contractId')}
+            />
+          )}
           {activeTab === 'guarantor' && <GuarantorInfo contracts={contracts} />}
           
           {activeTab === 'installment' && (

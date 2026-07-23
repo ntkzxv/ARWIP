@@ -1,7 +1,7 @@
 'use client'
 import { ClipboardList, MessageSquare, Phone, Home, MessageCircle, Clock, Calendar } from 'lucide-react'
 
-export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
+export default function CollectionHistoryTab({ logs = [] }: { logs?: any[] }) {
   const getMethodIcon = (method: string) => {
     switch (method) {
       case 'phone': return <Phone size={18} />;
@@ -21,7 +21,7 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 font-sans">
       {/* Header UI */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-50 pb-8">
         <div className="flex items-center gap-5">
@@ -37,13 +37,13 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
         </div>
         <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 text-center md:text-left">จำนวนการติดต่อ</p>
-          <p className="text-xl font-bold text-slate-900 text-center md:text-left">{logs.length} ครั้ง</p>
+          <p className="text-xl font-bold text-slate-900 text-center md:text-left">{logs?.length || 0} ครั้ง</p>
         </div>
       </div>
 
-      {logs.length > 0 ? (
+      {logs && logs.length > 0 ? (
         <div className="relative ml-4 md:ml-7 border-l-2 border-slate-100 pl-8 md:pl-12 space-y-10 pb-10">
-          {logs.map((log, index) => (
+          {logs.map((log) => (
             <div key={log.id} className="relative group">
               {/* Dot on Timeline */}
               <div className={`absolute -left-[45px] md:-left-[61px] top-0 w-8 h-8 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-white transition-transform group-hover:scale-110 ${getMethodColor(log.contact_method)}`}>
@@ -55,9 +55,9 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      {new Date(log.created_at).toLocaleDateString('th-TH', { 
+                      {log.created_at ? new Date(log.created_at).toLocaleDateString('th-TH', { 
                         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                      })}
+                      }) : '-'}
                     </p>
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${getMethodColor(log.contact_method)}`} />
@@ -81,7 +81,7 @@ export default function CollectionHistoryTab({ logs }: { logs: any[] }) {
                 </div>
 
                 <div className="bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-50">
-                  <p className="text-slate-700 font-bold leading-relaxed italic">"{log.result_note}"</p>
+                  <p className="text-slate-700 font-bold leading-relaxed italic">"{log.result_note || 'ไม่มีบันทึกเพิ่มเติม'}"</p>
                 </div>
               </div>
             </div>

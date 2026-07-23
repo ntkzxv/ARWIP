@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { Users, Eye, EyeOff, Briefcase, MapPin, User, ChevronDown, ChevronUp, UserCheck, Tag, Hash, Box } from 'lucide-react'
+import { Users, Eye, EyeOff, Briefcase, MapPin, User, ChevronDown, ChevronUp, UserCheck, Box } from 'lucide-react'
 
-export default function GuarantorInfo({ contracts }: any) {
+export default function GuarantorInfo({ contracts = [] }: { contracts?: any[] }) {
   const [showId, setShowId] = useState<Record<string, boolean>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -32,7 +32,7 @@ export default function GuarantorInfo({ contracts }: any) {
         product_id: con.sales_transactions?.product_id || '-',
         product_name: con.sales_transactions?.product_name || 'ไม่ระบุชื่อสินค้า'
       };
-    });
+    }) || [];
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -45,7 +45,7 @@ export default function GuarantorInfo({ contracts }: any) {
 
   if (!guarantors || guarantors.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-[45px] border-2 border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-[45px] border-2 border-dashed border-slate-200 font-sans">
         <Users size={64} className="text-slate-200 mb-4" />
         <p className="text-slate-400 font-bold italic text-center">ไม่พบข้อมูลผู้ค้ำประกันในระบบ</p>
       </div>
@@ -53,14 +53,14 @@ export default function GuarantorInfo({ contracts }: any) {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-        <div className="flex justify-end items-center px-2 mb-6">
-                <div className="flex items-center bg-slate-50 px-5 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
-                <span className="text-[12px] font-bold text-indigo-600 uppercase tracking-widest">
-                    {guarantors.length} ทั้งหมด
-                </span>
-                </div>
-            </div>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 font-sans">
+      <div className="flex justify-end items-center px-2 mb-6">
+        <div className="flex items-center bg-slate-50 px-5 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
+          <span className="text-[12px] font-bold text-indigo-600 uppercase tracking-widest">
+            {guarantors.length} ทั้งหมด
+          </span>
+        </div>
+      </div>
       
       {guarantors.map((g: any) => {
         const isExpanded = expandedId === g.contract_id;
@@ -68,7 +68,7 @@ export default function GuarantorInfo({ contracts }: any) {
         return (
           <div key={g.contract_id} className={`group bg-white rounded-[40px] border-2 transition-all duration-500 overflow-hidden ${isExpanded ? 'border-indigo-100 shadow-xl shadow-indigo-50/50' : 'border-slate-50 hover:border-indigo-200'}`}>
             
-            {/* --- Header Card --- */}
+            {/* Header Card */}
             <button 
               onClick={() => toggleExpand(g.contract_id)}
               className="w-full p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-colors text-left"
@@ -79,7 +79,7 @@ export default function GuarantorInfo({ contracts }: any) {
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Contract: {g.contract_id.slice(0,8).toUpperCase()}</span>
+                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Contract: {g.contract_id?.slice(0,8).toUpperCase()}</span>
                   </div>
                   <p className="text-2xl font-bold text-slate-900 tracking-tighter">{g.full_name}</p>
                 </div>
@@ -99,12 +99,12 @@ export default function GuarantorInfo({ contracts }: any) {
               </div>
             </button>
 
-            {/* --- Details Body --- */}
+            {/* Details Body */}
             {isExpanded && (
               <div className="p-10 border-t border-slate-50 space-y-12 animate-in slide-in-from-top-4 duration-500">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
                   
-                  {/* ข้อมูลส่วนตัว - 🚩 เปลี่ยน Heart เป็น User */}
+                  {/* ข้อมูลส่วนตัว */}
                   <div className="space-y-6">
                     <h3 className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 uppercase tracking-[0.2em] mb-4 border-b border-indigo-50 pb-4">
                       <User size={16}/> ข้อมูลส่วนตัวผู้ค้ำ
@@ -161,13 +161,13 @@ export default function GuarantorInfo({ contracts }: any) {
                     <div className="space-y-3">
                       <p className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่ปัจจุบัน</p>
                       <div className="p-7 bg-white rounded-[35px] border border-slate-100 min-h-[100px]">
-                        <p className="text-sm font-bold text-slate-900 leading-relaxed">{g.current_address}</p>
+                        <p className="text-sm font-bold text-slate-900 leading-relaxed">{g.current_address || '-'}</p>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <p className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">ที่อยู่ตามภูมิลำเนา</p>
                       <div className="p-7 bg-white rounded-[35px] border border-slate-100 min-h-[100px]">
-                        <p className="text-sm font-bold text-slate-900 leading-relaxed">{g.permanent_address}</p>
+                        <p className="text-sm font-bold text-slate-900 leading-relaxed">{g.permanent_address || '-'}</p>
                       </div>
                     </div>
                   </div>

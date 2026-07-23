@@ -6,7 +6,7 @@ import {
   Store, Hash, Tag, Box, User, Zap, Package
 } from 'lucide-react'
 
-export default function PurchaseHistory({ contracts, sales }: any) {
+export default function PurchaseHistory({ contracts = [], sales = [] }: any) {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [branchName, setBranchName] = useState<string>('กำลังโหลด...');
 
@@ -20,13 +20,20 @@ export default function PurchaseHistory({ contracts, sales }: any) {
     async function fetchBranch() {
       const bId = selectedItem.branch_id || selectedItem.sales_transactions?.branch_id || selectedItem.home_branch_id;
       if (!bId) { setBranchName('ไม่ระบุสาขา'); return; }
-      const { data } = await supabase.from('branches').select('branch_name').eq('id', bId).single();
-      if (data) setBranchName(data.branch_name);
+      
+      const { data, error } = await supabase.from('branches').select('branch_name').eq('id', bId).single();
+      if (error) {
+        console.error('Fetch Branch Error:', error);
+        setBranchName('ไม่ระบุสาขา');
+      } else if (data) {
+        setBranchName(data.branch_name);
+      }
     }
     fetchBranch();
   }, [selectedItem]);
 
   const formatDateSimple = (dateStr: string) => {
+    if (!dateStr) return '-';
     const d = new Date(dateStr);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -38,10 +45,10 @@ export default function PurchaseHistory({ contracts, sales }: any) {
     const isCash = selectedItem.type === 'cash';
     const sale = isCash ? selectedItem : (selectedItem.sales_transactions || {});
     const netPrice = Number(sale.unit_price || 0);
-    const grandTotal = Number(isCash ? netPrice : selectedItem.total_purchase_price);
+    const grandTotal = Number(isCash ? netPrice : selectedItem.total_purchase_price || 0);
 
     return (
-      <div className="space-y-6 animate-in slide-in-from-right duration-500 pb-10">
+      <div className="space-y-6 animate-in slide-in-from-right duration-500 pb-10 font-sans">
         <button 
           onClick={() => setSelectedItem(null)} 
           className="group flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold text-[10px] uppercase transition-all mb-4"
@@ -49,16 +56,14 @@ export default function PurchaseHistory({ contracts, sales }: any) {
           <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform"/> กลับสู่รายการทั้งหมด
         </button>
 
-        {/* --- 💎 1. ปรับปรุง Header Card ใหม่ (Compact & Clean) --- */}
+        {/* Header Card */}
         <div className="relative overflow-hidden bg-slate-950 rounded-[40px] shadow-2xl border border-white/5">
-          {/* แสงฟุ้ง Background */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[80px] -mr-20 -mt-20 rounded-full" />
           
           <div className="relative z-10 p-8 lg:p-10">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               
               <div className="flex items-center gap-6">
-                {/* Icon Container */}
                 <div className="relative shrink-0">
                   <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[22px] flex items-center justify-center shadow-xl shadow-indigo-500/20">
                     <Box size={30} className="text-white" />
@@ -68,7 +73,6 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                   </div>
                 </div>
 
-                {/* Info Area (ตัวหนังสือตรง สระไม่เบียด) */}
                 <div className="flex flex-col gap-2.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-[0.15em] border ${
@@ -79,17 +83,16 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                       {isCash ? 'Cash Payment' : 'Installment Active'}
                     </span>
                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md border border-white/5">
-                      REF: {selectedItem.id.slice(0, 8)}
+                      REF: {selectedItem.id?.slice(0, 8)}
                     </span>
                   </div>
                   
                   <h2 className="text-2xl lg:text-3xl font-bold text-white uppercase tracking-tight leading-snug">
-                    {sale.product_name}
+                    {sale.product_name || 'ไม่ระบุชื่อสินค้า'}
                   </h2>
                 </div>
               </div>
 
-              {/* Price Section (ฝั่งขวา) */}
               <div className="w-full lg:w-auto flex flex-col items-start lg:items-end border-t lg:border-t-0 border-white/5 pt-6 lg:pt-0">
                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">ยอดรวมที่ชำระทั้งสิ้น</p>
                 <div className="flex items-baseline gap-1.5">
@@ -104,7 +107,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
           </div>
         </div>
 
-        {/* --- ส่วนที่เหลือ (Grid ข้อมูล) --- */}
+        {/* Grid ข้อมูล */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
           {/* ข้อมูลสินค้า */}
           <div className="bg-white rounded-[35px] border border-slate-100 p-8 shadow-sm flex flex-col justify-between min-h-[400px]">
@@ -118,7 +121,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                   <DetailItem label="รหัสสินค้า" value={sale.product_id || 'N/A'} icon={<Hash size={14}/>} />
                   <DetailItem label="ประเภท" value={isCash ? 'ซื้อเงินสด' : 'ผ่อนชำระ'} icon={<Zap size={14}/>} />
                   <DetailItem label="วันที่" value={formatDateSimple(sale.created_at)} icon={<Calendar size={14}/>} />
-                  <DetailItem label="เวลา" value={new Date(sale.created_at).toLocaleTimeString('th-TH') + ' น.'} icon={<Clock size={14}/>} />
+                  <DetailItem label="เวลา" value={sale.created_at ? new Date(sale.created_at).toLocaleTimeString('th-TH') + ' น.' : '-'} icon={<Clock size={14}/>} />
                 </div>
               </div>
             </div>
@@ -127,7 +130,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
             </div>
           </div>
 
-          {/* 🚩 Financial Summary (ปรับปรุงขนาดฟอนต์ให้ใหญ่ขึ้น) */}
+          {/* Financial Summary */}
           <div className="bg-white rounded-[35px] border border-slate-100 p-8 shadow-sm flex flex-col">
             <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-5 mb-6">
               <Banknote size={14} className="text-indigo-600"/> Financial Summary
@@ -183,7 +186,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-700">
+    <div className="space-y-4 animate-in fade-in duration-700 font-sans">
       <div className="flex justify-between items-end px-2 mb-4">
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-10 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200"></div>
@@ -207,7 +210,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
           const isCash = item.type === 'cash';
           const sale = isCash ? item : (item.sales_transactions || {});
           const isCompleted = isCash || item.contract_status === 'completed';
-          const grandTotal = Number(isCash ? sale.unit_price : item.total_purchase_price);
+          const grandTotal = Number(isCash ? sale.unit_price : item.total_purchase_price || 0);
 
           const cardStyle = isCompleted 
             ? 'bg-slate-100 border-slate-200 opacity-80' 
@@ -229,7 +232,7 @@ export default function PurchaseHistory({ contracts, sales }: any) {
                         <Calendar size={10} /> {formatDateSimple(sale.created_at)}
                       </span>
                     </div>
-                    <h4 className="text-2xl font-bold text-slate-900 uppercase tracking-tighter leading-none">{sale.product_name}</h4>
+                    <h4 className="text-2xl font-bold text-slate-900 uppercase tracking-tighter leading-none">{sale.product_name || 'ไม่ระบุชื่อสินค้า'}</h4>
                   </div>
                 </div>
                 <div className="text-right">
