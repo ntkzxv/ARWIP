@@ -12,7 +12,7 @@ export default function StockMovementTablePage() {
       <header className="flex justify-between items-end max-w-7xl mx-auto">
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            Movement <span className="text-indigo-600">Logs</span>
+            Movement <span className="text-indigo-600">Logs(design)</span>
           </h1>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-3">
             บันทึกการเคลื่อนย้ายทรัพย์สินรายวัน • PRODUCT-CENTRIC AUDIT VIEW

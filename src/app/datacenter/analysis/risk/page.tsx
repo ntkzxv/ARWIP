@@ -12,7 +12,7 @@ export default function CreditRiskPage() {
       <header className="flex justify-between items-end max-w-7xl mx-auto">
         <div>
           <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            Risk <span className="text-rose-600">Surveillance</span>
+            Risk <span className="text-rose-600">Surveillance (design)</span>
           </h1>
           <div className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-3 flex items-center gap-2">
             ระบบเฝ้าระวังหนี้เสียและวิเคราะห์ความเสี่ยงระดับวิกฤต <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />

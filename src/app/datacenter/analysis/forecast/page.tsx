@@ -16,7 +16,7 @@ export default function ForecastAnalysisPage() {
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end max-w-7xl mx-auto gap-8">
         <div className="space-y-2">
           <h1 className="text-5xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            Financial <span className="text-indigo-600">Projection</span>
+            Financial <span className="text-indigo-600">Projection (design)</span>
           </h1>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em] flex items-center gap-2">
             ระบบพยากรณ์กระแสเงินสดและวิเคราะห์ความเสี่ยงสต็อกสินค้า <Sparkles size={12} className="text-indigo-500" />

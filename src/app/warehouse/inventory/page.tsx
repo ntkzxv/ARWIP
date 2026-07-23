@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, Suspense } from 'react' // 🚩 เพิ่ม Suspense
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { supabase } from '../../../utils/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
@@ -10,19 +10,16 @@ import ProductDetailDrawer from './components/ProductDetailDrawer'
 import Link from 'next/link'
 import InventorySkeleton from '../../../components/skeletons/InventorySkeleton'
 
-// 🚩 แยกเนื้อหาที่มีการใช้ useSearchParams ออกมาเป็นฟังก์ชันย่อย
 function InventoryContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // --- States ---
   const [products, setProducts] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([{ id: 'all', branch_name: 'ทุกสาขารวม' }])
   const [loading, setLoading] = useState(true)
   const [openCategories, setOpenCategories] = useState<string[]>([])
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   
-  // Filter States
   const [searchTerm, setSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด')
@@ -35,7 +32,6 @@ function InventoryContent() {
   const itemsPerPage = 10
   const [urlToUpdate, setUrlToUpdate] = useState<string | null>(null)
 
-  // --- Effects ---
   useEffect(() => { 
     initialFetch() 
   }, [])
@@ -64,20 +60,49 @@ function InventoryContent() {
     setLoading(true)
     try {
       const [productRes, branchRes] = await Promise.all([
-        supabase.from('products').select('*, inventory(quantity, branch_id, min_stock)').order('category', { ascending: true }),
-        supabase.from('branches').select('id, branch_name').order('branch_name', { ascending: true })
+        supabase
+          .from('products')
+          .select(`
+            *,
+            inventory (
+              quantity,
+              branch_id,
+              min_stock
+            )
+          `)
+          .order('category', { ascending: true }),
+        supabase
+          .from('branches')
+          .select('id, branch_name')
+          .order('branch_name', { ascending: true })
       ])
 
-      if (productRes.data) {
-        setProducts(productRes.data)
+      let loadedProducts = productRes.data || []
+
+      if (productRes.error || !loadedProducts.length) {
+        const [rawProducts, rawInventory] = await Promise.all([
+          supabase.from('products').select('*').order('category', { ascending: true }),
+          supabase.from('inventory').select('*')
+        ])
+
+        if (rawProducts.data) {
+          loadedProducts = rawProducts.data.map(p => ({
+            ...p,
+            inventory: rawInventory.data?.filter(inv => inv.product_id === p.id) || []
+          }))
+        }
       }
+
+      setProducts(loadedProducts)
+
       if (branchRes.data) {
         setBranches([{ id: 'all', branch_name: 'ทุกสาขารวม' }, ...branchRes.data])
       }
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoading(false)
     }
-    setTimeout(() => setLoading(false), 600)
   }
 
   const filteredProducts = useMemo(() => {
@@ -95,8 +120,8 @@ function InventoryContent() {
 
       return { ...p, current_display_qty: displayQty, current_min_stock: minStockForCheck };
     }).filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           p.product_code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           p.product_code?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'ทั้งหมด' || p.category === selectedCategory;
       
       let matchesStatus = true;
@@ -362,7 +387,6 @@ function InventoryContent() {
   )
 }
 
-// 🚩 export default ที่หุ้มด้วย Suspense เพื่อให้ Build ผ่าน
 export default function InventoryMasterPage() {
   return (
     <Suspense fallback={<InventorySkeleton />}>

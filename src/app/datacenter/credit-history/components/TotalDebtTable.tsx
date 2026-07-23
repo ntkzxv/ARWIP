@@ -1,176 +1,88 @@
 'use client'
 import React, { useState } from 'react'
-import { 
-  Landmark, Package, ChevronRight, 
-  Hash, Calculator, Box, Calendar
-} from 'lucide-react'
+import { Landmark, ChevronRight, Box, Calculator, Calendar } from 'lucide-react'
 
 export default function TotalDebtTable({ data }: { data: any[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (!data || data.length === 0) {
     return (
-      <div className="py-40 text-center relative z-10">
-        <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-[11px] font-sans">
-          No Debt Records Found
-        </p>
+      <div className="py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-xs">
+        No Debt Records Found
       </div>
     );
   }
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
   return (
-    <div className="w-full overflow-hidden font-sans">
-      <table className="w-full border-separate border-spacing-y-4 px-10 table-fixed">
-        <tbody>
-          {data.map((item, index) => {
-            const rowId = item.customer_id ? `debt-${item.customer_id}-${index}` : `debt-idx-${index}`;
-            const isExpanded = expandedId === rowId;
+    <div className="w-full overflow-x-auto p-4 sm:p-6">
+      <div className="min-w-[800px] space-y-3">
+        {data.map((item, index) => {
+          const rowId = `debt-${item.customer_id}-${index}`;
+          const isExpanded = expandedId === rowId;
 
-            return (
-              <React.Fragment key={rowId}>
-                {/* --- 👤 Card Header --- */}
-                <tr 
-                  onClick={() => toggleExpand(rowId)}
-                  className={`group bg-white hover:bg-slate-50 transition-all duration-500 shadow-sm hover:shadow-xl rounded-[35px] border-2 ${isExpanded ? 'border-slate-900 bg-slate-50/40' : 'border-slate-100/60 hover:border-slate-300'} cursor-pointer relative z-10`}
-                >
-                  <td className="py-9 pl-12 rounded-l-[35px] w-[130px] align-middle">
-                    <div className="flex items-center gap-6">
-                      <div className="relative">
-                        <div className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all duration-500 ${isExpanded ? 'bg-slate-900 text-white shadow-lg scale-110' : 'bg-slate-100 text-slate-500'}`}>
-                          <Landmark size={22} strokeWidth={2.5} />
+          return (
+            <div key={rowId} className="space-y-2">
+              <div 
+                onClick={() => setExpandedId(isExpanded ? null : rowId)}
+                className={`group bg-white hover:bg-slate-50 transition-all duration-300 shadow-sm hover:shadow-md rounded-2xl p-4 sm:p-5 border ${isExpanded ? 'border-slate-900 bg-slate-50/50' : 'border-slate-100/60'} cursor-pointer flex items-center justify-between gap-4`}
+              >
+                <div className="flex items-center gap-4 min-w-[220px]">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${isExpanded ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    <Landmark size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-base font-bold text-slate-900 truncate whitespace-nowrap">
+                      {item.customer_name || 'ไม่ระบุชื่อ'}
+                    </h4>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
+                      {isExpanded ? 'Click to Close' : 'Click to View'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-center min-w-[120px] whitespace-nowrap">
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Remaining</span>
+                  <span className="text-sm font-bold text-slate-800">{item.remaining_installments} งวด</span>
+                </div>
+
+                <div className="text-center min-w-[160px] whitespace-nowrap">
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Debt Balance</span>
+                  <span className="text-lg font-black text-slate-900">
+                    ฿{Number(item.total_remaining_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                <div className="w-9 h-9 rounded-full bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                  <ChevronRight size={18} className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4 animate-in fade-in duration-300">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">รายการสินค้าคงเหลือ</div>
+                  <div className="space-y-2">
+                    {item.product_list?.map((prod: any, idx: number) => (
+                      <div key={idx} className="bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <Box size={18} className="text-slate-400 shrink-0" />
+                          <div>
+                            <h5 className="text-sm font-bold text-slate-800">{prod.product_name}</h5>
+                            <span className="text-[10px] font-mono text-slate-400">{prod.product_id}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-slate-500 block">{prod.count} งวดที่เหลือ</span>
+                          <span className="text-sm font-black text-slate-900">฿{Number(prod.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
-                      <div className="h-10 w-[1px] bg-slate-100" />
-                    </div>
-                  </td>
-
-                  <td className="py-9 align-middle w-[25%] pl-2">
-                    <div className="flex flex-col">
-                      <span className={`text-[20px] font-black tracking-tight leading-none transition-colors ${isExpanded ? 'text-slate-900' : 'text-slate-800'}`}>
-                        {item.customer_name || 'ไม่ระบุชื่อ'}
-                      </span>
-                      <div className="flex items-center gap-1.5 mt-2.5">
-                        <span className={`text-[10px] font-black uppercase tracking-[0.15em] ${isExpanded ? 'text-slate-900' : 'text-slate-400'}`}>
-                          {isExpanded ? 'Close View' : 'Check Details'}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-9 align-middle w-[15%]">
-                    <div className="flex flex-col items-center border-x border-slate-100 h-12 justify-center">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Remaining</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-[24px] font-black text-slate-900 tracking-tighter">{item.remaining_installments}</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase">งวด</span>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* 4. Total Amount Section (🚩 แก้ไข: เพิ่ม THB ด้านหลัง) */}
-                  <td className="py-9 align-middle w-[25%] pr-10">
-                    <div className="flex flex-col items-end pr-10 border-r border-slate-100 h-12 justify-center">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Debt Balance</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className={`text-[26px] font-black tracking-tighter ${isExpanded ? 'text-slate-900' : 'text-slate-700'}`}>
-                          ฿{Number(item.total_remaining_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                        <span className={`text-[10px] font-black uppercase ${isExpanded ? 'text-slate-900' : 'text-slate-400'}`}>THB</span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-9 pr-12 rounded-r-[35px] flex-1 align-middle">
-                    <div className="flex items-center justify-end">
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 shadow-inner shrink-0 ml-4 ${
-                        isExpanded ? 'bg-slate-900 text-white rotate-90 shadow-md scale-110' : 'bg-slate-100 text-slate-300 group-hover:bg-slate-900 group-hover:text-white group-hover:rotate-45'
-                      }`}>
-                        <ChevronRight size={18} strokeWidth={3} />
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-
-                {/* --- 📝 Timeline Detail Section --- */}
-                {isExpanded && (
-                  <tr className="animate-in slide-in-from-top-8 fade-in duration-700">
-                    <td colSpan={5} className="px-10 pb-8 -mt-10">
-                      <div className="bg-slate-50/80 rounded-b-[45px] border-x-2 border-b-2 border-slate-200 pt-16 pb-8 px-12 shadow-inner">
-                        <div className="flex items-center gap-3 mb-8 px-2">
-                           <div className="w-1.5 h-6 bg-slate-900 rounded-full" />
-                           <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Pending Items Tracking History</span>
-                        </div>
-
-                        <div className="space-y-8 relative">
-                          {item.product_list?.map((prod: any, idx: number) => (
-                            <div key={`${rowId}-prod-${idx}`} className="relative flex gap-6 group/item">
-                              {idx !== item.product_list.length - 1 && (
-                                <div className="absolute left-[23px] top-12 bottom-[-32px] w-[2px] bg-slate-200 border-dashed" />
-                              )}
-                              <div className="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center group-hover/item:border-slate-900 transition-colors">
-                                <Box size={20} className="text-slate-400 group-hover/item:text-slate-900" />
-                              </div>
-                              <div className="flex-1 bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm group-hover/item:border-slate-900 group-hover/item:shadow-md transition-all">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Product</span>
-                                    <h4 className="text-[16px] font-black text-slate-900 uppercase leading-none">{prod.product_name}</h4>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="bg-slate-100 text-slate-900 text-[10px] font-black px-3 py-1 rounded-lg border border-slate-200 uppercase">
-                                      {prod.count} งวดที่เหลือ
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
-                                  <div className="flex items-center gap-1.5">
-                                    <Hash size={12} className="text-slate-400" />
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{prod.product_id}</span>
-                                  </div>
-                                  <div className="flex items-baseline gap-1">
-                                    <span className="text-[18px] font-black text-slate-900 tracking-tight">฿{Number(prod.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase">THB</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Summary Footer Box (🚩 แก้ไข: เพิ่ม THB ด้านหลัง) */}
-                        <div className="mt-10 pt-8 border-t border-dashed border-slate-300 flex flex-col md:flex-row justify-between items-center gap-4 px-6">
-                           <div className="flex items-center gap-3 text-slate-400">
-                              <Calendar size={14} />
-                              <span className="text-[10px] font-black uppercase tracking-widest">Data as of {new Date().toLocaleDateString('th-TH')}</span>
-                           </div>
-                           <div className="flex items-center gap-6">
-                              <div className="text-right">
-                                <p className="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-widest">Final Outstanding</p>
-                                <div className="flex items-baseline gap-1">
-                                  <p className="text-3xl font-black text-slate-950 tracking-tighter leading-none">
-                                    ฿{Number(item.total_remaining_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </p>
-                                  <span className="text-[12px] font-black text-slate-400 uppercase">THB</span>
-                                </div>
-                              </div>
-                              <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-lg">
-                                <Calculator size={20} />
-                              </div>
-                           </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </tbody>
-      </table>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

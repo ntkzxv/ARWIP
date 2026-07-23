@@ -16,7 +16,7 @@ export default function ComprehensivePerformance() {
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end max-w-7xl mx-auto gap-8">
         <div className="space-y-2">
           <h1 className="text-5xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            Business <span className="text-indigo-600">Unit</span> Pulse
+            Business <span className="text-indigo-600">Unit</span> Pulse(design)
           </h1>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">
             วิเคราะห์ประสิทธิภาพพนักงานรายแผนก: ขาย • บัญชี • ช่าง • ขนส่ง

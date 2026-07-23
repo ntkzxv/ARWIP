@@ -1,12 +1,11 @@
 'use client'
-import { useEffect, useState, useRef, memo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { 
   Search, History, ClockAlert, 
   ChevronLeft, ChevronRight, Calendar, X, Users 
 } from 'lucide-react'
 import { supabase } from '../../../utils/supabase'
 
-// Import Components
 import RecentTable from './components/RecentTable'
 import OverdueTable from './components/OverdueTable'
 import TotalDebtTable from './components/TotalDebtTable'
@@ -42,13 +41,28 @@ export default function CreditHistoryPage() {
       const to = from + rowsPerPage - 1;
 
       if (activeTab === 'recent') {
-        let query = supabase.from('credit_history').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+        let query = supabase
+          .from('credit_history')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false });
+
         if (searchTerm) query = query.ilike('customer_name', `%${searchTerm}%`);
         if (selectedDate) {
           query = query.gte('created_at', `${selectedDate}T00:00:00`).lte('created_at', `${selectedDate}T23:59:59`);
         }
         const { data: res, count } = await query.range(from, to);
-        setData(res || []);
+
+        const formattedRecent = res?.map((item: any) => ({
+          ...item,
+          customer_name: item.customer_name || 'ไม่ระบุชื่อ',
+          bank_ref: item.bank_ref || item.transaction_code || item.reference_code || 'TRX-PAYMENT',
+          amount: item.amount || item.received_amount || 0,
+          created_at: item.created_at,
+          installment_number: item.installment_number || item.term || '-',
+          product_id: item.product_id || 'N/A'
+        })) || [];
+
+        setData(formattedRecent);
         setTotalCount(count || 0);
 
       } else if (activeTab === 'overdue') {
@@ -65,8 +79,8 @@ export default function CreditHistoryPage() {
         const { data: res, count } = await query.order('due_date', { ascending: true }).range(from, to);
         setData(res?.map((item: any) => ({
           ...item,
-          customer_name: item.installment_contracts.customers.full_name,
-          product_id: item.installment_contracts.sales_transactions.product_id
+          customer_name: item.installment_contracts?.customers?.full_name || 'ไม่ระบุชื่อ',
+          product_id: item.installment_contracts?.sales_transactions?.product_id || 'N/A'
         })) || []);
         setTotalCount(count || 0);
 
@@ -86,14 +100,16 @@ export default function CreditHistoryPage() {
         const { data: allPending } = await query;
         
         const summaryMap = allPending?.reduce((acc: any, item: any) => {
-          const custId = item.installment_contracts.customer_id;
-          const productId = item.installment_contracts.sales_transactions.product_id;
-          const productName = item.installment_contracts.sales_transactions.product_name;
+          const custId = item.installment_contracts?.customer_id;
+          const productId = item.installment_contracts?.sales_transactions?.product_id || 'UNKNOWN';
+          const productName = item.installment_contracts?.sales_transactions?.product_name || 'สินค้าผ่อนชำระ';
+
+          if (!custId) return acc;
 
           if (!acc[custId]) {
             acc[custId] = {
               customer_id: custId,
-              customer_name: item.installment_contracts.customers.full_name,
+              customer_name: item.installment_contracts?.customers?.full_name || 'ไม่ระบุชื่อ',
               remaining_installments: 0,
               total_remaining_amount: 0,
               products: {} 
@@ -101,7 +117,7 @@ export default function CreditHistoryPage() {
           }
 
           acc[custId].remaining_installments += 1;
-          acc[custId].total_remaining_amount += Number(item.amount);
+          acc[custId].total_remaining_amount += Number(item.amount || 0);
 
           if (!acc[custId].products[productId]) {
             acc[custId].products[productId] = {
@@ -112,7 +128,7 @@ export default function CreditHistoryPage() {
             };
           }
           acc[custId].products[productId].count += 1;
-          acc[custId].products[productId].subtotal += Number(item.amount);
+          acc[custId].products[productId].subtotal += Number(item.amount || 0);
 
           return acc;
         }, {});
@@ -129,7 +145,11 @@ export default function CreditHistoryPage() {
         setTotalCount(groupedArray.length);
         setData(groupedArray.slice(from, to + 1));
       }
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+    } catch (err) { 
+      console.error(err); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => { fetchData() }, [activeTab, searchTerm, currentPage, selectedDate])
@@ -137,62 +157,70 @@ export default function CreditHistoryPage() {
   const totalPages = Math.ceil(totalCount / rowsPerPage) || 1;
 
   return (
-    <div className="space-y-6 pb-10 font-sans animate-in fade-in duration-700 pl-30 pr-15">
-      {/* Header & Tabs */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="w-full min-w-0 space-y-6 pb-10 font-sans bg-[#F4F7FE] min-h-screen animate-in fade-in duration-700">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            credit<span className="text-indigo-600">history</span>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight uppercase leading-none">
+            CREDIT<span className="text-indigo-600">HISTORY</span>
           </h1>
-          <p className="text-[10.5px] font-black text-slate-400 uppercase tracking-[0.3em]">ประวัติการเงินและยอดสรุปหนี้ค้าง</p>
+          <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+            ประวัติการเงินและยอดสรุปหนี้ค้าง
+          </p>
         </div>
-        <div className="flex p-1 bg-slate-100 rounded-[1.5rem] shadow-inner border border-slate-200">
+        <div className="flex flex-wrap p-1.5 bg-slate-200/60 rounded-2xl border border-slate-200/80 w-full sm:w-auto">
           <CategoryBtn active={activeTab === 'recent'} activeColor="text-emerald-600" label="จ่ายล่าสุด" icon={History} onClick={() => handleTabChange('recent')} />
           <CategoryBtn active={activeTab === 'overdue'} activeColor="text-rose-600" label="ค้างชำระ" icon={ClockAlert} onClick={() => handleTabChange('overdue')} />
           <CategoryBtn active={activeTab === 'total_debt'} activeColor="text-indigo-600" label="ยอดผ่อนทั้งหมด" icon={Users} onClick={() => handleTabChange('total_debt')} />
         </div>
       </div>
 
-      {/* Search & Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm">
-        <div className="lg:col-span-4 relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-          <input type="text" placeholder="ค้นหาชื่อลูกค้า..." value={searchTerm} onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}} className="w-full pl-14 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm outline-none font-bold italic" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+        <div className="lg:col-span-5 relative group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+          <input 
+            type="text" 
+            placeholder="ค้นหาชื่อลูกค้า..." 
+            value={searchTerm} 
+            onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}} 
+            className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-semibold outline-none placeholder:text-slate-300" 
+          />
         </div>
         
-        <div className="lg:col-span-5 px-2">
-            <div className="flex justify-between mb-2.5 px-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider italic">Analysis Status</span>
-                <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight italic">Paid</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-600" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight italic">Overdue</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /><span className="text-[10px] font-black text-slate-600 uppercase tracking-tight italic">Total</span></div>
-                </div>
+        <div className="lg:col-span-4 px-1">
+          <div className="flex justify-between mb-2 px-1">
+            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Analysis Status</span>
+            <div className="flex gap-3">
+              <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Paid</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-600" /><span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Overdue</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /><span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Total</span></div>
             </div>
-            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
-                <div style={{ width: '45%' }} className="h-full bg-emerald-500" />
-                <div style={{ width: '25%' }} className="h-full bg-rose-600" />
-                <div style={{ width: '30%' }} className="h-full bg-indigo-500" />
-            </div>
+          </div>
+          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+            <div style={{ width: '45%' }} className="h-full bg-emerald-500" />
+            <div style={{ width: '25%' }} className="h-full bg-rose-600" />
+            <div style={{ width: '30%' }} className="h-full bg-indigo-500" />
+          </div>
         </div>
 
         <div className="lg:col-span-3 relative">
           <input type="date" ref={dateInputRef} className="absolute opacity-0 pointer-events-none" onChange={(e) => {setSelectedDate(e.target.value); setCurrentPage(1);}} />
-          <button onClick={() => dateInputRef.current?.showPicker()} className={`w-full h-[54px] flex items-center justify-center gap-3 px-6 rounded-2xl font-black text-[10px] uppercase shadow-lg active:scale-95 relative transition-all italic ${selectedDate ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+          <button 
+            onClick={() => dateInputRef.current?.showPicker()} 
+            className={`w-full h-[48px] flex items-center justify-center gap-2 px-5 rounded-2xl font-bold text-xs uppercase shadow-sm active:scale-95 transition-all ${selectedDate ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+          >
             <Calendar size={16} />
             <span>{selectedDate ? new Date(selectedDate).toLocaleDateString('th-TH') : 'เลือกวันที่'}</span>
-            {selectedDate && <X size={14} className="ml-2" onClick={(e) => {e.stopPropagation(); setSelectedDate('');}} />}
+            {selectedDate && <X size={14} className="ml-1 hover:text-rose-200" onClick={(e) => {e.stopPropagation(); setSelectedDate('');}} />}
           </button>
         </div>
       </div>
 
-      {/* Table Content */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
-        <div className="flex-1">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden min-h-[500px] flex flex-col">
+        <div className="flex-1 w-full overflow-x-auto">
           {loading ? (
             <SkeletonTable rows={rowsPerPage} />
           ) : (
-            <div className="overflow-x-auto animate-in fade-in duration-500">
+            <div className="w-full min-w-[700px] animate-in fade-in duration-500">
               {activeTab === 'recent' && <RecentTable data={data} onRowClick={() => {}} />}
               {activeTab === 'overdue' && <OverdueTable data={data} onRowClick={() => {}} />}
               {activeTab === 'total_debt' && <TotalDebtTable data={data} />}
@@ -200,16 +228,33 @@ export default function CreditHistoryPage() {
           )}
         </div>
 
-        {/* Pagination */}
-        <div className="p-10 bg-slate-50/30 border-t border-slate-50 flex items-center justify-end">
+        <div className="p-4 sm:p-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between sm:justify-end gap-4">
           <div className="flex items-center gap-2">
-            <button disabled={currentPage === 1} onClick={() => {setCurrentPage(p => p - 1); scrollToTop();}} className="w-12 h-12 flex items-center justify-center rounded-[18px] border bg-white disabled:opacity-30 active:scale-90 transition-all"><ChevronLeft size={18}/></button>
-            <div className="flex gap-2">
+            <button 
+              disabled={currentPage === 1} 
+              onClick={() => {setCurrentPage(p => p - 1); scrollToTop();}} 
+              className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 disabled:opacity-30 active:scale-90 transition-all hover:bg-slate-50"
+            >
+              <ChevronLeft size={18}/>
+            </button>
+            <div className="flex gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-none py-1">
               {[...Array(totalPages)].map((_, i) => (
-                <button key={i} onClick={() => {setCurrentPage(i+1); scrollToTop();}} className={`w-12 h-12 rounded-[18px] font-black text-sm transition-all ${currentPage === i+1 ? 'bg-slate-900 text-white shadow-lg scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`}>{i+1}</button>
+                <button 
+                  key={i} 
+                  onClick={() => {setCurrentPage(i+1); scrollToTop();}} 
+                  className={`min-w-[40px] h-10 px-3 rounded-xl font-bold text-xs transition-all ${currentPage === i+1 ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
+                >
+                  {i+1}
+                </button>
               ))}
             </div>
-            <button disabled={currentPage === totalPages} onClick={() => {setCurrentPage(p => p + 1); scrollToTop();}} className="w-12 h-12 flex items-center justify-center rounded-[18px] border bg-white disabled:opacity-30 active:scale-90 transition-all"><ChevronRight size={18}/></button>
+            <button 
+              disabled={currentPage === totalPages} 
+              onClick={() => {setCurrentPage(p => p + 1); scrollToTop();}} 
+              className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 disabled:opacity-30 active:scale-90 transition-all hover:bg-slate-50"
+            >
+              <ChevronRight size={18}/>
+            </button>
           </div>
         </div>
       </div>
@@ -217,24 +262,21 @@ export default function CreditHistoryPage() {
   )
 }
 
-// 🚩 Skeleton Component สำหรับ Table
 function SkeletonTable({ rows }: { rows: number }) {
   return (
-    <div className="w-full animate-pulse">
-      {/* Skeleton Header */}
-      <div className="grid grid-cols-5 gap-4 p-8 bg-slate-50 border-bottom border-slate-100">
+    <div className="w-full animate-pulse min-w-[700px]">
+      <div className="grid grid-cols-5 gap-4 p-6 bg-slate-50/50 border-b border-slate-100">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-3 bg-slate-200 rounded-full w-24"></div>
+          <div key={i} className="h-2.5 bg-slate-200 rounded-full w-20"></div>
         ))}
       </div>
-      {/* Skeleton Rows */}
       {[...Array(rows)].map((_, i) => (
-        <div key={i} className="grid grid-cols-5 gap-4 p-8 border-b border-slate-50 items-center">
-          <div className="h-4 bg-slate-100 rounded-lg w-40"></div>
-          <div className="h-3 bg-slate-50 rounded-full w-28"></div>
-          <div className="h-3 bg-slate-50 rounded-full w-20"></div>
+        <div key={i} className="grid grid-cols-5 gap-4 p-6 border-b border-slate-50 items-center">
+          <div className="h-3.5 bg-slate-100 rounded-lg w-36"></div>
           <div className="h-3 bg-slate-50 rounded-full w-24"></div>
-          <div className="h-8 bg-slate-50 rounded-xl w-10 justify-self-end"></div>
+          <div className="h-3 bg-slate-50 rounded-full w-16"></div>
+          <div className="h-3 bg-slate-50 rounded-full w-20"></div>
+          <div className="h-7 bg-slate-50 rounded-lg w-8 justify-self-end"></div>
         </div>
       ))}
     </div>
@@ -243,8 +285,11 @@ function SkeletonTable({ rows }: { rows: number }) {
 
 function CategoryBtn({ active, label, icon: Icon, onClick, activeColor }: any) {
   return (
-    <button onClick={onClick} className={`px-8 py-3.5 rounded-[1.2rem] text-[11px] font-black uppercase flex items-center gap-3 transition-all duration-300 ${active ? `bg-white ${activeColor} shadow-md scale-105` : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}>
-      <Icon size={16} /> {label}
+    <button 
+      onClick={onClick} 
+      className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 rounded-xl text-[11px] font-bold uppercase flex items-center justify-center gap-2 transition-all duration-300 whitespace-nowrap ${active ? `bg-white ${activeColor} shadow-sm` : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+    >
+      <Icon size={15} /> {label}
     </button>
   )
 }

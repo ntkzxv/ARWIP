@@ -13,7 +13,7 @@ export default function PDIInspectionPage() {
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end max-w-7xl mx-auto gap-8">
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            PDI <span className="text-indigo-600">Inspection</span>
+            PDI <span className="text-indigo-600">Inspection(design)</span>
           </h1>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-3">
             ประวัติการตรวจสภาพสินค้าก่อนส่งมอบ • QUALITY ASSURANCE LOGS

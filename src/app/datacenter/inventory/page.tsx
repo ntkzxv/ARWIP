@@ -14,7 +14,7 @@ export default function StockMonitoringPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
              <h1 className="text-5xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-               Stock <span className="text-indigo-600">Surveillance</span>
+               Stock <span className="text-indigo-600">Surveillance(design)</span>
              </h1>
              <div className="px-3 py-1 bg-slate-950 text-white text-[8px] font-black uppercase rounded-full tracking-[0.2em] animate-pulse">
                 Live Sync

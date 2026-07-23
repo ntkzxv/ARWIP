@@ -1,19 +1,15 @@
 'use client'
-import { useEffect, useState, useRef, memo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { 
   Search, Bell, ClockAlert, History, 
-  X, Zap, Phone, ClipboardList, 
-  Hash, Box, Send, Banknote, Clock,
-  Calendar, Timer, ChevronLeft, ChevronRight, UserCheck
+  Send, Calendar, ChevronLeft, ChevronRight 
 } from 'lucide-react'
 import { supabase } from '../../../utils/supabase'
 
-// Import Components
 import CollectionHistoryView from './components/CollectionHistoryView'
 import CollectionLogModal from '../../../components/CollectionLogModal'
 import UrgentContactModal from '../../../components/UrgentContactModal'
 import NotificationList from './components/NotificationList' 
-import Swal from 'sweetalert2'
 
 export default function NotificationsPage() {
   const [loading, setLoading] = useState(true)
@@ -66,8 +62,8 @@ export default function NotificationsPage() {
       const COOLDOWN_MS = 48 * 60 * 60 * 1000;
 
       data?.forEach((customer: any) => {
-        customer.installment_contracts.forEach((contract: any) => {
-          const unpaid = contract.installment_payments.filter((p: any) => !p.paid_at);
+        customer.installment_contracts?.forEach((contract: any) => {
+          const unpaid = contract.installment_payments?.filter((p: any) => !p.paid_at) || [];
           unpaid.forEach((payment: any) => {
             formattedData.push({
               ...payment,
@@ -76,7 +72,7 @@ export default function NotificationsPage() {
               installment_contracts: {
                 id: contract.id,
                 customers: { full_name: customer.full_name },
-                sales_transactions: customer.sales_transactions[0]
+                sales_transactions: customer.sales_transactions?.[0] || { product_name: '-', product_id: 'N/A' }
               }
             });
           });
@@ -84,7 +80,7 @@ export default function NotificationsPage() {
       });
 
       const filteredBySearch = formattedData.filter(item => {
-        const matchSearch = !searchTerm || item.installment_contracts?.customers?.full_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchSearch = !searchTerm || item.installment_contracts?.customers?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchDate = !selectedDate || item.due_date === selectedDate;
         return matchSearch && matchDate;
       });
@@ -124,17 +120,19 @@ export default function NotificationsPage() {
   const currentItems = overdueList.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
-    <div className="space-y-6 pb-10 font-sans animate-in fade-in duration-700 pl-30 pr-15 bg-[#F4F7FE] min-h-screen">
+    <div className="w-full min-w-0 space-y-6 pb-10 font-sans bg-[#F4F7FE] min-h-screen animate-in fade-in duration-700">
       
-      {/* --- HEADER & TABS --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-700">
+      {/* HEADER & TABS */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">
-            notifi<span className="text-indigo-600">cations</span>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight uppercase leading-none">
+            NOTIFI<span className="text-indigo-600">CATIONS</span>
           </h1>
-          <p className="text-[10.5px] font-black text-slate-400 uppercase tracking-[0.3em]">INTELLIGENT DEBT COLLECTION SYSTEM</p>
+          <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+            INTELLIGENT DEBT COLLECTION SYSTEM
+          </p>
         </div>
-        <div className="flex p-1 bg-slate-100 rounded-[1.5rem] shadow-inner border border-slate-200">
+        <div className="flex flex-wrap p-1.5 bg-slate-200/60 rounded-2xl border border-slate-200/80 w-full sm:w-auto">
           <TabBtn active={activeTab === 'upcoming'} label="ใกล้ครบ" icon={Bell} activeColor="text-amber-500" onClick={() => setActiveTab('upcoming')} />
           <TabBtn active={activeTab === 'pending'} label="ค้างชำระ" icon={ClockAlert} activeColor="text-rose-600" onClick={() => setActiveTab('pending')} />
           <TabBtn active={activeTab === 'notified'} label="ตามแล้ว" icon={Send} activeColor="text-indigo-600" onClick={() => setActiveTab('notified')} />
@@ -142,41 +140,41 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* --- SEARCH & FILTER --- */}
+      {/* SEARCH & FILTER */}
       {activeTab !== 'history' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm animate-in fade-in delay-100">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm">
           <div className="lg:col-span-9 relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" size={18} />
             <input 
               type="text" 
               placeholder="ค้นหาชื่อลูกค้า..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-16 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black uppercase tracking-tight outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all italic"
+              className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all placeholder:text-slate-300"
             />
           </div>
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 relative">
             <input type="date" ref={dateInputRef} className="absolute opacity-0 pointer-events-none" onChange={(e) => setSelectedDate(e.target.value)} />
             <button 
               onClick={() => dateInputRef.current?.showPicker()}
-              className={`w-full h-[54px] flex items-center justify-center gap-3 px-6 rounded-2xl font-black text-[10px] uppercase transition-all shadow-lg active:scale-95 relative italic ${
+              className={`w-full h-[48px] flex items-center justify-center gap-2 px-5 rounded-2xl font-bold text-xs uppercase transition-all shadow-sm active:scale-95 ${
                 selectedDate ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'
               }`}
             >
               <Calendar size={16} />
-              <span>{selectedDate ? new Date(selectedDate).toLocaleDateString('th-TH') : 'เลือกวันที่ต้องการดู'}</span>
+              <span>{selectedDate ? new Date(selectedDate).toLocaleDateString('th-TH') : 'เลือกวันที่'}</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* --- 📋 MAIN CONTENT WRAPPER --- */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden min-h-[600px] flex flex-col transition-all duration-700">
-        <div className="flex-1">
+      {/* MAIN CONTENT WRAPPER */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden min-h-[500px] flex flex-col">
+        <div className="flex-1 w-full overflow-x-auto">
           {loading && activeTab !== 'history' ? (
             <SkeletonNotificationList rows={6} />
           ) : (
-            <div className="h-full animate-in fade-in duration-500">
+            <div className="w-full min-w-[700px] animate-in fade-in duration-500">
               {activeTab === 'history' ? (
                 <CollectionHistoryView />
               ) : (
@@ -196,26 +194,32 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        {/* --- PAGINATION FOOTER --- */}
+        {/* PAGINATION FOOTER */}
         {!loading && activeTab !== 'history' && overdueList.length > rowsPerPage && (
-          <div className="p-10 bg-slate-50/30 border-t border-slate-100 flex items-center justify-end">
+          <div className="p-4 sm:p-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between sm:justify-end gap-4">
             <div className="flex items-center gap-2">
-              <button disabled={currentPage === 1} onClick={() => {setCurrentPage(prev => Math.max(1, prev - 1)); window.scrollTo({top: 0, behavior: 'smooth'});}} 
-                className={`w-12 h-12 flex items-center justify-center rounded-[18px] border transition-all ${currentPage === 1 ? 'opacity-20 cursor-not-allowed' : 'bg-white text-slate-900 hover:bg-slate-50 shadow-sm active:scale-90'}`}
+              <button 
+                disabled={currentPage === 1} 
+                onClick={() => {setCurrentPage(prev => Math.max(1, prev - 1)); window.scrollTo({top: 0, behavior: 'smooth'});}} 
+                className={`w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 transition-all ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'bg-white text-slate-700 hover:bg-slate-50 active:scale-90'}`}
               >
                 <ChevronLeft size={18} strokeWidth={2.5}/>
               </button>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-none py-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button key={page} onClick={() => {setCurrentPage(page); window.scrollTo({top: 0, behavior: 'smooth'});}}
-                    className={`w-12 h-12 rounded-[18px] flex items-center justify-center font-black text-sm transition-all ${currentPage === page ? 'bg-slate-950 text-white shadow-lg scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:border-slate-300' }`}
+                  <button 
+                    key={page} 
+                    onClick={() => {setCurrentPage(page); window.scrollTo({top: 0, behavior: 'smooth'});}}
+                    className={`min-w-[40px] h-10 px-3 rounded-xl flex items-center justify-center font-bold text-xs transition-all ${currentPage === page ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50' }`}
                   >
                     {page}
                   </button>
                 ))}
               </div>
-              <button disabled={currentPage === totalPages} onClick={() => {setCurrentPage(prev => Math.min(totalPages, prev + 1)); window.scrollTo({top: 0, behavior: 'smooth'});}} 
-                className={`w-12 h-12 flex items-center justify-center rounded-[18px] border transition-all ${currentPage === totalPages ? 'opacity-20 cursor-not-allowed' : 'bg-white text-slate-900 hover:bg-slate-50 shadow-sm active:scale-90'}`}
+              <button 
+                disabled={currentPage === totalPages} 
+                onClick={() => {setCurrentPage(prev => Math.min(totalPages, prev + 1)); window.scrollTo({top: 0, behavior: 'smooth'});}} 
+                className={`w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 transition-all ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'bg-white text-slate-700 hover:bg-slate-50 active:scale-90'}`}
               >
                 <ChevronRight size={18} strokeWidth={2.5}/>
               </button>
@@ -230,25 +234,24 @@ export default function NotificationsPage() {
   )
 }
 
-// 🚩 Component สำหรับ Skeleton List การติดตามหนี้
 function SkeletonNotificationList({ rows }: { rows: number }) {
   return (
-    <div className="w-full animate-pulse p-8 space-y-6">
+    <div className="w-full animate-pulse p-6 space-y-4 min-w-[700px]">
       {[...Array(rows)].map((_, i) => (
-        <div key={i} className="flex items-center justify-between p-8 bg-slate-50/50 rounded-[35px] border border-slate-100/50">
-          <div className="flex items-center gap-6 flex-1">
-            <div className="w-16 h-16 bg-slate-200/60 rounded-[22px]"></div>
-            <div className="space-y-3">
-              <div className="h-4 bg-slate-200 rounded-lg w-48"></div>
-              <div className="h-2 bg-slate-100 rounded-full w-32"></div>
+        <div key={i} className="flex items-center justify-between p-5 bg-slate-50/50 rounded-2xl border border-slate-100">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-12 h-12 bg-slate-200/60 rounded-2xl shrink-0"></div>
+            <div className="space-y-2">
+              <div className="h-3.5 bg-slate-200 rounded-lg w-40"></div>
+              <div className="h-2 bg-slate-100 rounded-full w-24"></div>
             </div>
           </div>
-          <div className="flex gap-12 items-center">
-             <div className="space-y-2 text-right">
-                <div className="h-3 bg-slate-100 rounded-full w-20 ml-auto"></div>
-                <div className="h-2 bg-slate-50 rounded-full w-14 ml-auto"></div>
+          <div className="flex gap-8 items-center">
+             <div className="space-y-1.5 text-right">
+                <div className="h-3 bg-slate-100 rounded-full w-16 ml-auto"></div>
+                <div className="h-2 bg-slate-50 rounded-full w-12 ml-auto"></div>
              </div>
-             <div className="w-24 h-10 bg-slate-200/60 rounded-xl"></div>
+             <div className="w-20 h-8 bg-slate-200/60 rounded-xl"></div>
           </div>
         </div>
       ))}
@@ -258,8 +261,11 @@ function SkeletonNotificationList({ rows }: { rows: number }) {
 
 function TabBtn({ active, label, icon: Icon, onClick, activeColor }: any) {
   return (
-    <button onClick={onClick} className={`px-8 py-4 rounded-[1.8rem] text-[11px] font-black uppercase flex items-center gap-3 transition-all duration-300 ${active ? `bg-white ${activeColor} shadow-md scale-105 italic` : 'text-slate-500 hover:text-slate-700'}`}>
-      <Icon size={16} /> {label}
+    <button 
+      onClick={onClick} 
+      className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 rounded-xl text-[11px] font-bold uppercase flex items-center justify-center gap-2 transition-all duration-300 whitespace-nowrap ${active ? `bg-white ${activeColor} shadow-sm` : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+    >
+      <Icon size={15} /> {label}
     </button>
   )
 }
