@@ -27,6 +27,7 @@ export default function UnderConstruction({ pageName = 'หน้านี้' }
         <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200/60 px-4 py-1.5 rounded-full uppercase tracking-widest">
           System Notice
         </span>
+        <h2></h2>
         <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
           {pageName} อยู่ระหว่างการปรับปรุง
         </h2>

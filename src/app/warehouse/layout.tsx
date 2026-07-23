@@ -1,20 +1,16 @@
 'use client'
 import Sidebar from '../../components/SidebarWarehouse'
 
-export default function DatacenterLayout({
+export default function WarehouseLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen w-full bg-[#F4F7FE] relative overflow-hidden font-sans">
-      
-      {/* Sidebar: ล็อคความสูงเต็มจอ ไม่เลื่อนตามเนื้อหา */}
+    <div className="flex h-[100dvh] w-full bg-[#F4F7FE] relative overflow-x-hidden font-sans">
       <Sidebar />
-
-      {/* Main Content: เลื่อนแยกอิสระ และพื้นหลังคลุมเต็มพื้นที่ */}
-      <main className="flex-1 h-full overflow-y-auto bg-[#F4F7FE] custom-scrollbar">
-        <div className="min-h-full w-full p-4 lg:p-10 text-slate-900">
+      <main className="flex-1 h-full min-w-0 overflow-y-auto bg-[#F4F7FE] custom-scrollbar">
+        <div className="min-h-full w-full max-w-[1920px] mx-auto p-4 sm:p-6 lg:p-10 text-slate-900">
           {children}
         </div>
       </main>
@@ -23,7 +19,7 @@ export default function DatacenterLayout({
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { 
-          background: rgba(0, 0, 0, 0.05); 
+          background: rgba(0, 0, 0, 0.08); 
           border-radius: 20px; 
         }
       `}</style>
